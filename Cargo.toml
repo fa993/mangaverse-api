@@ -6,4 +6,15 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-rocket = "0.5.0-rc.2"
+rocket = { version = "0.5.0-rc.2", features = ["json", "uuid"]}
+serde = { version = "1.0", features = ["derive"] }
+chrono = { version = "0.4.22", features = ["serde"] }
+sea-orm = { version = "0.9.2", features = ["runtime-tokio-native-tls", "sqlx-mysql", "with-uuid", "with-json"]}
+async-trait = "0.1.57"
+
+[dependencies.sea-orm-rocket]
+# path = "../../sea-orm-rocket/lib" # remove this line in your own project and use the git line
+git = "https://github.com/SeaQL/sea-orm"
+
+[dependencies.impl-gen]
+git = "https://github.com/fa993/impl-gen"
