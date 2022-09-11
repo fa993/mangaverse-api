@@ -7,7 +7,7 @@ pub struct ErrorResponder {
 }
 
 #[allow(clippy::from_over_into)]
-impl Into<ErrorResponder> for sea_orm::DbErr {
+impl Into<ErrorResponder> for sqlx::Error {
     fn into(self) -> ErrorResponder {
         ErrorResponder {
             message: self.to_string(),
@@ -25,28 +25,38 @@ impl Into<ErrorResponder> for Infallible {
 
 pub mod v1 {
 
-    use crate::entities::*;
-    use crate::{
-        db::pool::Db,
-        models::manga::{CompleteManga},
-        routes::ErrorResponder,
-    };
+    use crate::models::genre::MangaGenre;
+    use crate::models::manga::{CompleteManga, MainManga, MangaView};
+    use crate::models::source::MangaSource;
+    use crate::routes::ErrorResponder;
+    use crate::Db;
     use rocket::serde::json::Json;
-    use sea_orm::EntityTrait;
-    use sea_orm::prelude::Uuid;
-    use sea_orm_rocket::Connection;
+    use rocket::serde::uuid::Uuid;
+    use rocket_db_pools::Connection;
 
     #[get("/v1/<id>")]
     pub async fn get_manga(
-        conn: Connection<'_, Db>,
+        mut conn: Connection<Db>,
         id: Uuid,
     ) -> Result<Json<CompleteManga>, ErrorResponder> {
-        let db = conn.into_inner();
-        let res = manga::Entity::find_by_id(id.to_string())
-            .one(db)
-            .await
-            .map_err(Into::into)?;
+        let act_id = id.to_string();
 
-        todo!()
+        let mut ret = MainManga::default();
+
+        ret.manga_view = MangaView::assemble(&act_id, &mut conn).await?;
+        ret.source = MangaSource::assemble(&act_id, &mut conn).await?;
+        ret.genres = MangaGenre::assemble(&act_id, &mut conn).await?;
+        // ret.artists
+        // ret.authors
+        // ret.chapters
+
+        println!("{:#?}", ret);
+
+        // println!("{:#?}", genres);
+        let mut mng = CompleteManga::default();
+
+        mng.main = ret;
+
+        Ok(Json(mng))
     }
 }

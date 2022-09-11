@@ -1,8 +1,7 @@
-use sea_orm::{FromQueryResult, prelude::Uuid};
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize, FromQueryResult)]
+#[derive(Serialize, Deserialize, Default, sqlx::FromRow, Debug)]
 pub struct MangaAuthor {
-    id: Uuid,
+    id: String,
     name: String,
 }

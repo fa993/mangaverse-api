@@ -1,4 +1,4 @@
-[default.databases.sea_orm]
+[default.databases.manga_server]
 # Mysql
 # make sure to enable "sqlx-mysql" feature in Cargo.toml, i.e default = ["sqlx-mysql"]
 url = "mysql://admin:admin123@localhost/manga_server"

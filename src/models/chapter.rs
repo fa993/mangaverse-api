@@ -1,8 +1,7 @@
 use rocket::serde::{Deserialize, Serialize};
-use sea_orm::{FromQueryResult, prelude::Uuid};
 
-#[derive(Serialize, Deserialize, FromQueryResult)]
+#[derive(Serialize, Deserialize, Default, sqlx::FromRow, Debug)]
 pub struct MangaChapter {
-    id: Uuid,
+    id: String,
     name: String,
 }

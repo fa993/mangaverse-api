@@ -1,15 +1,16 @@
-pub mod db;
-pub mod entities;
 pub mod models;
 pub mod routes;
 
-use sea_orm_rocket::Database;
+use rocket_db_pools::{sqlx, Database};
 
-use crate::db::pool::Db;
 use crate::routes::v1;
 
 #[macro_use]
 extern crate rocket;
+
+#[derive(Database)]
+#[database("manga_server")]
+pub struct Db(sqlx::MySqlPool);
 
 #[launch]
 fn rocket() -> _ {
