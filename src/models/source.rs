@@ -3,14 +3,11 @@ use rocket_db_pools::Connection;
 
 use crate::{routes::ErrorResponder, Db};
 
-pub type MainMangaSource = MangaSource;
-pub type LinkedMangaSource = MangaSource;
-
 #[derive(Serialize, Deserialize, Default, sqlx::FromRow, Debug)]
 pub struct MangaSource {
     #[sqlx(rename = "source_id")]
-    id: String,
-    name: String,
+    pub id: String,
+    pub name: String,
 }
 
 impl MangaSource {

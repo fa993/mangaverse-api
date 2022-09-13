@@ -25,9 +25,7 @@ impl Into<ErrorResponder> for Infallible {
 
 pub mod v1 {
 
-    use crate::models::genre::MangaGenre;
-    use crate::models::manga::{CompleteManga, MainManga, MangaView};
-    use crate::models::source::MangaSource;
+    use crate::models::manga::CompleteManga;
     use crate::routes::ErrorResponder;
     use crate::Db;
     use rocket::serde::json::Json;
@@ -41,21 +39,17 @@ pub mod v1 {
     ) -> Result<Json<CompleteManga>, ErrorResponder> {
         let act_id = id.to_string();
 
-        let mut ret = MainManga::default();
+        let mng = CompleteManga::assemble(act_id, &mut conn).await?;
 
-        ret.manga_view = MangaView::assemble(&act_id, &mut conn).await?;
-        ret.source = MangaSource::assemble(&act_id, &mut conn).await?;
-        ret.genres = MangaGenre::assemble(&act_id, &mut conn).await?;
-        // ret.artists
-        // ret.authors
-        // ret.chapters
+        // let ret = MainManga::assemble(act_id, &mut conn).await?;
 
-        println!("{:#?}", ret);
+        // // println!("{:#?}", genres);
+        // let mut mng = CompleteManga::default();
 
-        // println!("{:#?}", genres);
-        let mut mng = CompleteManga::default();
+        // mng.related = LinkedManga::assemble(&ret.manga_view.linked_id, &ret.manga_view.id, &mut conn).await?;
+        // mng.main = ret;
 
-        mng.main = ret;
+        println!("{:#?}", mng);
 
         Ok(Json(mng))
     }
