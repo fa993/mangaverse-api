@@ -26,7 +26,7 @@ impl MangaGenre {
 
     pub async fn all(conn: &Db) -> Result<Vec<MangaGenre>, ErrorResponder> {
         Ok(
-            sqlx::query_as("SELECT genre.genre_id, genre.name from genre")
+            sqlx::query_as("SELECT genre.genre_id, genre.name from genre order by genre.name ASC")
                 .fetch_all(&**conn)
                 .await
                 .map_err(Into::into)?,

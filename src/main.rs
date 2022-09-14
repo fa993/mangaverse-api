@@ -23,5 +23,14 @@ fn rocket() -> _ {
             let data = MangaGenre::all(dbs).await.expect("Should have worked");
             rocket.manage(std::sync::Arc::new(data))
         }))
-        .mount("/", routes![v1::get_manga])
+        .mount(
+            "/",
+            routes![
+                v1::get_manga,
+                v1::refresh_all,
+                v1::get_linked_manga,
+                v1::get_all_genres,
+                v1::get_chapter
+            ],
+        )
 }

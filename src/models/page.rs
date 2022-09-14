@@ -1,7 +1,6 @@
-use rocket_db_pools::Connection;
-
 use crate::{routes::ErrorResponder, Db};
 use rocket::serde::{Deserialize, Serialize};
+use rocket_db_pools::Connection;
 
 #[derive(Serialize, Deserialize, Default, Debug, sqlx::FromRow)]
 pub struct PageURL {
