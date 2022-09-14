@@ -19,10 +19,12 @@ impl MangaChapter {
         id: &String,
         conn: &mut Connection<Db>,
     ) -> Result<Vec<MangaChapter>, ErrorResponder> {
-        Ok(sqlx::query_as("SELECT chapter_id, chapter_name, chapter_number, sequence_number, updated_at from chapter where manga_id = ? ")
-                            .bind(id)
-                            .fetch_all(&mut **conn)
-                            .await
-                            .map_err(Into::into)?)
+        Ok(
+            sqlx::query_as("SELECT chapter_id, chapter_name, chapter_number, sequence_number, updated_at from chapter where manga_id = ? ")
+                .bind(id)
+                .fetch_all(&mut **conn)
+                .await
+                .map_err(Into::into)?
+        )
     }
 }

@@ -22,7 +22,7 @@ impl CompleteManga {
         let ret = MainManga::assemble(id, conn).await?;
 
         mng.related =
-            LinkedManga::assemble(&ret.manga_view.linked_id, &ret.manga_view.id, conn).await?;
+            LinkedManga::assemble_all(&ret.manga_view.linked_id, &ret.manga_view.id, conn).await?;
         mng.main = ret;
 
         Ok(mng)
@@ -67,6 +67,18 @@ pub struct LinkedManga {
 
 impl LinkedManga {
     pub async fn assemble(
+        id: &String,
+        conn: &mut Connection<Db>,
+    ) -> Result<LinkedManga, ErrorResponder> {
+        let mut ret = LinkedManga::default();
+
+        ret.manga_view = MangaView::assemble(id, conn).await?;
+        ret.chapters = MangaChapter::assemble(id, conn).await?;
+
+        Ok(ret)
+    }
+
+    pub async fn assemble_all(
         linked_id: &String,
         id: &String,
         conn: &mut Connection<Db>,
@@ -139,12 +151,14 @@ impl MangaView {
         id: &String,
         conn: &mut Connection<Db>,
     ) -> Result<MangaView, ErrorResponder> {
-        Ok(sqlx::query_as("SELECT manga_id, linked_id, manga.name, cover_url, last_updated, description, status, source.source_id, source.name as source_name from manga, source where manga.manga_id = ? AND manga.source_id = source.source_id")
-                            .bind(id)
-                            .fetch_one(&mut **conn)
-                            .await
-                            .map(|f: MangaJoinedView| f.into())
-                            .map_err(Into::into)?)
+        Ok(
+            sqlx::query_as("SELECT manga_id, linked_id, manga.name, cover_url, last_updated, description, status, source.source_id, source.name as source_name from manga, source where manga.manga_id = ? AND manga.source_id = source.source_id")
+                .bind(id)
+                .fetch_one(&mut **conn)
+                .await
+                .map(|f: MangaJoinedView| f.into())
+                .map_err(Into::into)?
+        )
     }
 
     pub async fn assemble_linked(
@@ -152,12 +166,14 @@ impl MangaView {
         id: &String,
         conn: &mut Connection<Db>,
     ) -> Result<Vec<MangaView>, ErrorResponder> {
-        Ok(sqlx::query_as("SELECT manga_id, linked_id, manga.name, cover_url, last_updated, description, status, source.source_id, source.name as source_name from manga, source where manga.linked_id = ? AND manga.manga_id != ? AND manga.source_id = source.source_id")
-                            .bind(linked_id)
-                            .bind(id)
-                            .fetch_all(&mut **conn)
-                            .await
-                            .map(|f: Vec<MangaJoinedView>| f.into_iter().map(|t| t.into()).collect())
-                            .map_err(Into::into)?)
+        Ok(
+            sqlx::query_as("SELECT manga_id, linked_id, manga.name, cover_url, last_updated, description, status, source.source_id, source.name as source_name from manga, source where manga.linked_id = ? AND manga.manga_id != ? AND manga.source_id = source.source_id")
+                .bind(linked_id)
+                .bind(id)
+                .fetch_all(&mut **conn)
+                .await
+                .map(|f: Vec<MangaJoinedView>| f.into_iter().map(|t| t.into()).collect())
+                .map_err(Into::into)?
+        )
     }
 }

@@ -15,10 +15,21 @@ impl MangaGenre {
         id: &String,
         conn: &mut Connection<Db>,
     ) -> Result<Vec<MangaGenre>, ErrorResponder> {
-        Ok(sqlx::query_as("SELECT genre.genre_id, genre.name from manga, manga_genre, genre where manga.manga_id = ? AND manga.manga_id = manga_genre.manga_id AND manga_genre.genre_id = genre.genre_id")
-                            .bind(id)
-                            .fetch_all(&mut **conn)
-                            .await
-                            .map_err(Into::into)?)
+        Ok(
+            sqlx::query_as("SELECT genre.genre_id, genre.name from manga, manga_genre, genre where manga.manga_id = ? AND manga.manga_id = manga_genre.manga_id AND manga_genre.genre_id = genre.genre_id")
+                .bind(id)
+                .fetch_all(&mut **conn)
+                .await
+                .map_err(Into::into)?
+        )
+    }
+
+    pub async fn all(conn: &Db) -> Result<Vec<MangaGenre>, ErrorResponder> {
+        Ok(
+            sqlx::query_as("SELECT genre.genre_id, genre.name from genre")
+                .fetch_all(&**conn)
+                .await
+                .map_err(Into::into)?,
+        )
     }
 }

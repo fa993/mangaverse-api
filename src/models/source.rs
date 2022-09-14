@@ -15,10 +15,12 @@ impl MangaSource {
         id: &String,
         conn: &mut Connection<Db>,
     ) -> Result<MangaSource, ErrorResponder> {
-        Ok(sqlx::query_as("SELECT source.source_id, source.name from source, manga where manga.source_id = source.source_id AND manga.manga_id = ?")
-        .bind(id)
-        .fetch_one(&mut **conn)
-        .await
-        .map_err(Into::into)?)
+        Ok(
+            sqlx::query_as("SELECT source.source_id, source.name from source, manga where manga.source_id = source.source_id AND manga.manga_id = ?")
+                .bind(id)
+                .fetch_one(&mut **conn)
+                .await
+                .map_err(Into::into)?
+        )
     }
 }
