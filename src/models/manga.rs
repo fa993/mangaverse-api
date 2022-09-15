@@ -14,7 +14,7 @@ pub struct CompleteManga {
 
 impl CompleteManga {
     pub async fn assemble(
-        id: String,
+        id: &str,
         conn: &mut Connection<Db>,
     ) -> Result<CompleteManga, ErrorResponder> {
         let mut mng = CompleteManga::default();
@@ -41,13 +41,13 @@ pub struct MainManga {
 
 impl MainManga {
     pub async fn assemble(
-        id: String,
+        id: &str,
         conn: &mut Connection<Db>,
     ) -> Result<MainManga, ErrorResponder> {
         let mut ret = MainManga::default();
 
-        ret.manga_view = MangaView::assemble(&id, conn).await?;
-        ret.genres = MangaGenre::assemble(&id, conn).await?;
+        ret.manga_view = MangaView::assemble(id, conn).await?;
+        ret.genres = MangaGenre::assemble(id, conn).await?;
         ret.authors = MangaAuthor::assemble_author(&id, conn).await?;
         ret.artists = MangaAuthor::assemble_artist(&id, conn).await?;
 
@@ -67,7 +67,7 @@ pub struct LinkedManga {
 
 impl LinkedManga {
     pub async fn assemble(
-        id: &String,
+        id: &str,
         conn: &mut Connection<Db>,
     ) -> Result<LinkedManga, ErrorResponder> {
         let mut ret = LinkedManga::default();
@@ -79,12 +79,10 @@ impl LinkedManga {
     }
 
     pub async fn assemble_all(
-        linked_id: &String,
-        id: &String,
+        linked_id: &str,
+        id: &str,
         conn: &mut Connection<Db>,
     ) -> Result<Vec<LinkedManga>, ErrorResponder> {
-        // let mut ret = LinkedManga::default();
-
         let all = MangaView::assemble_linked(&linked_id, &id, conn).await?;
 
         let mut ret = Vec::new();
@@ -148,7 +146,7 @@ impl From<MangaJoinedView> for MangaView {
 
 impl MangaView {
     pub async fn assemble(
-        id: &String,
+        id: &str,
         conn: &mut Connection<Db>,
     ) -> Result<MangaView, ErrorResponder> {
         Ok(
@@ -162,8 +160,8 @@ impl MangaView {
     }
 
     pub async fn assemble_linked(
-        linked_id: &String,
-        id: &String,
+        linked_id: &str,
+        id: &str,
         conn: &mut Connection<Db>,
     ) -> Result<Vec<MangaView>, ErrorResponder> {
         Ok(

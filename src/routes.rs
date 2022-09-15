@@ -3,7 +3,7 @@ use std::convert::Infallible;
 #[derive(Responder, Debug)]
 #[response(status = 500, content_type = "json")]
 pub struct ErrorResponder {
-    message: String,
+    pub message: String,
 }
 
 #[allow(clippy::from_over_into)]
@@ -25,11 +25,14 @@ impl Into<ErrorResponder> for Infallible {
 
 pub mod v1 {
 
+    use std::collections::HashMap;
     use std::sync::Arc;
 
     use crate::models::genre::MangaGenre;
     use crate::models::manga::{CompleteManga, LinkedManga};
-    use crate::models::page::PageURL;
+    use crate::models::page::{ChapterPosition, PageURL};
+    use crate::models::pattern::AllPatterns;
+    use crate::models::query::{MangaQuery, MangaQueryResponse, MangaRequest};
     use crate::routes::ErrorResponder;
     use crate::Db;
     use rocket::serde::json::Json;
@@ -42,13 +45,7 @@ pub mod v1 {
         mut conn: Connection<Db>,
         id: Uuid,
     ) -> Result<Json<CompleteManga>, ErrorResponder> {
-        let act_id = id.to_string();
-
-        let mng = CompleteManga::assemble(act_id, &mut conn).await?;
-
-        println!("{:#?}", mng);
-
-        Ok(Json(mng))
+        Ok(Json(CompleteManga::assemble(id.to_string().as_str(), &mut conn).await?))
     }
 
     #[post("/v1/refresh", data = "<_ids>")]
@@ -81,32 +78,47 @@ pub mod v1 {
         Ok(Json(PageURL::assemble(&id.to_string(), &mut conn).await?))
     }
 
-    /*
-
-    @GetMapping("/chapter/position/{manga_id}/{sequence_number}")
-    public ChapterPosition getChapterIndex(@PathVariable(name = "manga_id") String mangaId, @PathVariable(name = "sequence_number") Integer sequenceNumber) {
-        return this.pageManager.getPosition(mangaId, sequenceNumber);
+    #[get("/v1/chapter/position/<manga_id>/<sequence_number>")]
+    pub async fn get_chapter_position(
+        mut conn: Connection<Db>,
+        manga_id: Uuid,
+        sequence_number: u32,
+    ) -> Result<Json<ChapterPosition>, ErrorResponder> {
+        Ok(Json(
+            ChapterPosition::assemble(&manga_id.to_string(), sequence_number, &mut conn).await?,
+        ))
     }
 
-    @PostMapping("/search")
-    public MangaQueryResponse getManga(@RequestBody MangaQuery query) {
-        return new MangaQueryResponse(query, listingManager.findAllByQuery(query));
+    #[post("/v1/search", data = "<query>")]
+    pub async fn get_manga_from_query(
+        query: Json<MangaQuery>,
+        mut conn: Connection<Db>,
+    ) -> Result<Json<MangaQueryResponse>, ErrorResponder> {
+        Ok(Json(
+            MangaQueryResponse::assemble_query(query.0, &mut conn).await?,
+        ))
     }
 
-    @PostMapping("/home")
-    public MangaQueryResponse getHomePage(@RequestBody MangaQuery query) {
-        return new MangaQueryResponse(query, listingManager.getHome(query));
+    #[post("/v1/home", data = "<query>")]
+    pub async fn get_manga_for_home(
+        query: Json<MangaQuery>,
+        mut conn: Connection<Db>,
+    ) -> Result<Json<MangaQueryResponse>, ErrorResponder> {
+        Ok(Json(
+            MangaQueryResponse::assemble_home(query.0, &mut conn).await?,
+        ))
     }
 
-    @GetMapping("/currentSources")
-    public Map<String, String> getSourcePatterns() {
-        return sourceManager.getPatterns();
+    #[get("/v1/currentSources")]
+    pub async fn get_source_patterns(
+        patterns: &State<Arc<AllPatterns>>,
+    ) -> Result<Json<HashMap<String, String>>, ErrorResponder> {
+        let pts: HashMap<String, String> = patterns.inner().patterns.clone();
+        Ok(Json(pts))
     }
 
-    @PostMapping("/insert")
-    public void insertURL(@RequestBody MangaRequest req) {
-        sct.watchSingle(req.url, req.id);
+    #[post("/v1/insert", data = "<_req>")]
+    pub fn insert_manga(_req: Json<MangaRequest>) -> Result<(), ErrorResponder> {
+        Ok(())
     }
-
-    */
 }

@@ -11,7 +11,7 @@ pub struct MangaAuthor {
 
 impl MangaAuthor {
     pub async fn assemble_author(
-        id: &String,
+        id: &str,
         conn: &mut Connection<Db>,
     ) -> Result<Vec<MangaAuthor>, ErrorResponder> {
         Ok(
@@ -24,7 +24,7 @@ impl MangaAuthor {
     }
 
     pub async fn assemble_artist(
-        id: &String,
+        id: &str,
         conn: &mut Connection<Db>,
     ) -> Result<Vec<MangaAuthor>, ErrorResponder> {
         Ok(

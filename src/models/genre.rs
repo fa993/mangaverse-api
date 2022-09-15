@@ -12,7 +12,7 @@ pub struct MangaGenre {
 
 impl MangaGenre {
     pub async fn assemble(
-        id: &String,
+        id: &str,
         conn: &mut Connection<Db>,
     ) -> Result<Vec<MangaGenre>, ErrorResponder> {
         Ok(

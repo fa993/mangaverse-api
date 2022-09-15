@@ -1,7 +1,7 @@
 pub mod models;
 pub mod routes;
 
-use models::genre::MangaGenre;
+use models::{genre::MangaGenre, pattern::SourcePattern};
 use rocket::fairing::AdHoc;
 use rocket_db_pools::{sqlx, Database};
 
@@ -20,8 +20,15 @@ fn rocket() -> _ {
         .attach(Db::init())
         .attach(AdHoc::on_ignite("populate state", |rocket| async {
             let dbs = Db::fetch(&rocket).expect("No db");
-            let data = MangaGenre::all(dbs).await.expect("Should have worked");
-            rocket.manage(std::sync::Arc::new(data))
+            let data = MangaGenre::all(dbs)
+                .await
+                .expect("Error while fetching genres");
+            let patterns = SourcePattern::all(dbs)
+                .await
+                .expect("Error while fetching patterns");
+            rocket
+                .manage(std::sync::Arc::new(data))
+                .manage(std::sync::Arc::new(patterns))
         }))
         .mount(
             "/",
@@ -30,7 +37,12 @@ fn rocket() -> _ {
                 v1::refresh_all,
                 v1::get_linked_manga,
                 v1::get_all_genres,
-                v1::get_chapter
+                v1::get_chapter,
+                v1::get_chapter_position,
+                v1::get_manga_from_query,
+                v1::get_manga_for_home,
+                v1::get_source_patterns,
+                v1::insert_manga,
             ],
         )
 }
