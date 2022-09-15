@@ -45,7 +45,9 @@ pub mod v1 {
         mut conn: Connection<Db>,
         id: Uuid,
     ) -> Result<Json<CompleteManga>, ErrorResponder> {
-        Ok(Json(CompleteManga::assemble(id.to_string().as_str(), &mut conn).await?))
+        Ok(Json(
+            CompleteManga::assemble(id.to_string().as_str(), &mut conn).await?,
+        ))
     }
 
     #[post("/v1/refresh", data = "<_ids>")]
