@@ -8,9 +8,13 @@ use crate::{routes::ErrorResponder, Db};
 pub struct MangaChapter {
     #[sqlx(rename = "chapter_id")]
     id: String,
+    #[serde(rename = "chapterName")]
     chapter_name: String,
+    #[serde(rename = "chapterNumber")]
     chapter_number: String,
+    #[serde(rename = "sequenceNumber")]
     sequence_number: i64,
+    #[serde(rename = "updatedAt")]
     updated_at: DateTime<chrono::Utc>,
 }
 

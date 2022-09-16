@@ -40,7 +40,7 @@ pub mod v1 {
     use rocket::State;
     use rocket_db_pools::Connection;
 
-    #[get("/v1/<id>")]
+    #[get("/<id>")]
     pub async fn get_manga(
         mut conn: Connection<Db>,
         id: Uuid,
@@ -50,12 +50,12 @@ pub mod v1 {
         ))
     }
 
-    #[post("/v1/refresh", data = "<_ids>")]
+    #[post("/refresh", data = "<_ids>")]
     pub fn refresh_all(_ids: Json<Vec<Uuid>>) -> Result<(), ErrorResponder> {
         Ok(())
     }
 
-    #[get("/v1/part/<id>")]
+    #[get("/part/<id>")]
     pub async fn get_linked_manga(
         mut conn: Connection<Db>,
         id: Uuid,
@@ -65,14 +65,14 @@ pub mod v1 {
         ))
     }
 
-    #[get("/v1/genres")]
+    #[get("/genres")]
     pub async fn get_all_genres(
         genres: &State<Arc<Vec<MangaGenre>>>,
     ) -> Result<Json<&[MangaGenre]>, ErrorResponder> {
         Ok(Json(genres.inner().as_slice()))
     }
 
-    #[get("/v1/chapter/<id>")]
+    #[get("/chapter/<id>")]
     pub async fn get_chapter(
         mut conn: Connection<Db>,
         id: Uuid,
@@ -80,7 +80,7 @@ pub mod v1 {
         Ok(Json(PageURL::assemble(&id.to_string(), &mut conn).await?))
     }
 
-    #[get("/v1/chapter/position/<manga_id>/<sequence_number>")]
+    #[get("/chapter/position/<manga_id>/<sequence_number>")]
     pub async fn get_chapter_position(
         mut conn: Connection<Db>,
         manga_id: Uuid,
@@ -91,7 +91,7 @@ pub mod v1 {
         ))
     }
 
-    #[post("/v1/search", data = "<query>")]
+    #[post("/search", data = "<query>")]
     pub async fn get_manga_from_query(
         query: Json<MangaQuery>,
         mut conn: Connection<Db>,
@@ -101,7 +101,7 @@ pub mod v1 {
         ))
     }
 
-    #[post("/v1/home", data = "<query>")]
+    #[post("/home", data = "<query>")]
     pub async fn get_manga_for_home(
         query: Json<MangaQuery>,
         mut conn: Connection<Db>,
@@ -111,7 +111,7 @@ pub mod v1 {
         ))
     }
 
-    #[get("/v1/currentSources")]
+    #[get("/currentSources")]
     pub async fn get_source_patterns(
         patterns: &State<Arc<AllPatterns>>,
     ) -> Result<Json<HashMap<String, String>>, ErrorResponder> {
@@ -119,7 +119,7 @@ pub mod v1 {
         Ok(Json(pts))
     }
 
-    #[post("/v1/insert", data = "<_req>")]
+    #[post("/insert", data = "<_req>")]
     pub fn insert_manga(_req: Json<MangaRequest>) -> Result<(), ErrorResponder> {
         Ok(())
     }

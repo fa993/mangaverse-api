@@ -31,7 +31,7 @@ fn rocket() -> _ {
                 .manage(std::sync::Arc::new(patterns))
         }))
         .mount(
-            "/",
+            "/public/manga/v1",
             routes![
                 v1::get_manga,
                 v1::refresh_all,

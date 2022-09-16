@@ -24,13 +24,13 @@ impl PageURL {
 
 #[derive(Serialize, Deserialize, Default, Debug)]
 pub struct ChapterPosition {
-    pub index: u32,
-    pub length: u32,
+    pub index: i64,
+    pub length: i64,
 }
 
 #[derive(Serialize, Deserialize, Default, Debug, sqlx::FromRow)]
 struct DatabaseNum {
-    pub num: u32,
+    pub num: i64,
 }
 
 impl ChapterPosition {

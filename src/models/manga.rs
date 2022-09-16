@@ -103,9 +103,12 @@ impl LinkedManga {
 pub struct MangaView {
     #[sqlx(rename = "manga_id")]
     pub id: String,
+    #[serde(rename = "linkedId")]
     pub linked_id: String,
     name: String,
+    #[serde(rename = "coverURL")]
     cover_url: String,
+    #[serde(rename = "lastUpdated")]
     last_updated: Option<DateTime<chrono::Utc>>,
     description: String,
     status: String,

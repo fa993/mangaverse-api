@@ -6,10 +6,11 @@ use crate::{routes::ErrorResponder, Db};
 #[derive(Serialize, Deserialize, Default, Debug)]
 pub struct MangaQuery {
     id: String,
-    name: String,
+    name: Option<String>,
     offset: u32,
     limit: u32,
     preferred_source_id: Option<String>,
+    #[serde(rename = "genreIds", default)]
     genre_ids: Vec<String>,
 }
 
@@ -17,8 +18,10 @@ pub struct MangaQuery {
 pub struct MangaHeading {
     id: String,
     name: String,
+    #[serde(rename = "coverURL")]
     cover_url: String,
     genres: String,
+    #[serde(rename = "smallDescription")]
     small_description: String,
 }
 
@@ -35,7 +38,9 @@ impl MangaQueryResponse {
     ) -> Result<MangaQueryResponse, ErrorResponder> {
         if query.preferred_source_id.is_none() {
             let mut q_str = String::from('%');
-            q_str.push_str(&query.name);
+            q_str.push_str(&query.name.as_ref().ok_or(ErrorResponder {
+                message: "No Name found".to_string(),
+            })?);
             q_str.push('%');
             let ret: Vec<MangaHeading> = sqlx::query_as(
                 "select manga_listing.manga_id as id, manga_listing.name as name, manga_listing.cover_url as cover_url, manga_listing.description_small as small_description, manga_listing.genres as genres from manga, manga_listing where exists (select linked_id from title where manga.linked_id = title.linked_id AND title.title LIKE ? ) AND manga.is_main = 1 AND manga.is_old = false AND manga_listing.manga_id = manga.manga_id limit ?, ?",
@@ -52,7 +57,9 @@ impl MangaQueryResponse {
             })
         } else if let Some(t) = &query.preferred_source_id {
             let mut q_str = String::from('%');
-            q_str.push_str(&query.name);
+            q_str.push_str(&query.name.as_ref().ok_or(ErrorResponder {
+                message: "No Name found".to_string(),
+            })?);
             q_str.push('%');
             let ret: Vec<MangaHeading> = sqlx::query_as(
                 "select manga_listing.manga_id as id, manga_listing.name as name, manga_listing.cover_url as cover_url, manga_listing.description_small as small_description, manga_listing.genres as genres from manga, manga_listing where exists (select linked_id from title where manga.linked_id = title.linked_id AND title.title LIKE ? ) AND manga.source_id = ? AND manga.is_main IS NOT NULL AND manga.is_old = false AND manga_listing.manga_id = manga.manga_id UNION select manga_listing.manga_id as id, manga_listing.name as name, manga_listing.cover_url as cover_url, manga_listing.description_small as small_description, manga_listing.genres as genres from manga, manga_listing where exists (select linked_id from title where manga.linked_id = title.linked_id AND title.title LIKE ? ) AND manga.is_main = 1 AND manga.is_old = false AND manga_listing.manga_id = manga.manga_id limit ?, ?",
