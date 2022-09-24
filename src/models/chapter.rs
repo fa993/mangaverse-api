@@ -1,21 +1,17 @@
-use chrono::DateTime;
-use rocket::serde::{Deserialize, Serialize};
+use chrono::NaiveDateTime;
+use rocket::serde::Serialize;
 use rocket_db_pools::Connection;
 
 use crate::{routes::ErrorResponder, Db};
 
-#[derive(Serialize, Deserialize, Default, Debug, sqlx::FromRow)]
+#[derive(Serialize, Default, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct MangaChapter {
-    #[sqlx(rename = "chapter_id")]
     id: String,
-    #[serde(rename = "chapterName")]
     chapter_name: String,
-    #[serde(rename = "chapterNumber")]
     chapter_number: String,
-    #[serde(rename = "sequenceNumber")]
-    sequence_number: i64,
-    #[serde(rename = "updatedAt")]
-    updated_at: DateTime<chrono::Utc>,
+    sequence_number: i32,
+    updated_at: Option<NaiveDateTime>,
 }
 
 impl MangaChapter {
@@ -24,11 +20,14 @@ impl MangaChapter {
         conn: &mut Connection<Db>,
     ) -> Result<Vec<MangaChapter>, ErrorResponder> {
         Ok(
-            sqlx::query_as("SELECT chapter_id, chapter_name, chapter_number, sequence_number, updated_at from chapter where manga_id = ? ")
-                .bind(id)
-                .fetch_all(&mut **conn)
-                .await
-                .map_err(Into::into)?
+            sqlx::query_as!(
+                MangaChapter,
+                "SELECT chapter_id as id, chapter_name, chapter_number, sequence_number, updated_at from chapter where manga_id = ? ",
+                id
+            )
+            .fetch_all(&mut **conn)
+            .await
+            .map_err(Into::into)?
         )
     }
 }

@@ -1,3 +1,4 @@
 /target
 orange.*
 .DS_Store
+.env

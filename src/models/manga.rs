@@ -1,12 +1,12 @@
 use crate::{routes::ErrorResponder, Db};
-use rocket::serde::{Deserialize, Serialize};
+use chrono::NaiveDateTime;
+use rocket::serde::Serialize;
 use rocket_db_pools::Connection;
-use sqlx::types::chrono::DateTime;
 
 use super::{author::MangaAuthor, genre::MangaGenre, source::MangaSource};
 use crate::models::chapter::MangaChapter;
 
-#[derive(Serialize, Deserialize, Default, Debug)]
+#[derive(Serialize, Default, Debug)]
 pub struct CompleteManga {
     pub main: MainManga,
     pub related: Vec<LinkedManga>,
@@ -29,7 +29,7 @@ impl CompleteManga {
     }
 }
 
-#[derive(Serialize, Deserialize, Default, Debug)]
+#[derive(Serialize, Default, Debug)]
 pub struct MainManga {
     #[serde(flatten)]
     pub manga_view: MangaView,
@@ -57,11 +57,10 @@ impl MainManga {
     }
 }
 
-#[derive(Serialize, Deserialize, Default, sqlx::FromRow, Debug)]
+#[derive(Serialize, Default, Debug)]
 pub struct LinkedManga {
     #[serde(flatten)]
     manga_view: MangaView,
-    #[sqlx(default)]
     chapters: Vec<MangaChapter>,
 }
 
@@ -99,30 +98,26 @@ impl LinkedManga {
     }
 }
 
-#[derive(Serialize, Deserialize, Default, sqlx::FromRow, Debug)]
+#[derive(Serialize, Default, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct MangaView {
-    #[sqlx(rename = "manga_id")]
     pub id: String,
-    #[serde(rename = "linkedId")]
     pub linked_id: String,
     name: String,
     #[serde(rename = "coverURL")]
     cover_url: String,
-    #[serde(rename = "lastUpdated")]
-    last_updated: Option<DateTime<chrono::Utc>>,
+    last_updated: Option<NaiveDateTime>,
     description: String,
     status: String,
     source: MangaSource,
 }
 
-#[derive(Serialize, Deserialize, Default, sqlx::FromRow, Debug)]
 pub struct MangaJoinedView {
-    #[sqlx(rename = "manga_id")]
     id: String,
     linked_id: String,
     name: String,
     cover_url: String,
-    last_updated: Option<DateTime<chrono::Utc>>,
+    last_updated: Option<NaiveDateTime>,
     description: String,
     status: String,
     source_id: String,
@@ -153,12 +148,15 @@ impl MangaView {
         conn: &mut Connection<Db>,
     ) -> Result<MangaView, ErrorResponder> {
         Ok(
-            sqlx::query_as("SELECT manga_id, linked_id, manga.name, cover_url, last_updated, description, status, source.source_id, source.name as source_name from manga, source where manga.manga_id = ? AND manga.source_id = source.source_id")
-                .bind(id)
-                .fetch_one(&mut **conn)
-                .await
-                .map(|f: MangaJoinedView| f.into())
-                .map_err(Into::into)?
+            sqlx::query_as!(
+                MangaJoinedView,
+                "SELECT manga_id as id, linked_id, manga.name, cover_url, last_updated, description, status, source.source_id, source.name as source_name from manga, source where manga.manga_id = ? AND manga.source_id = source.source_id",
+                id
+            )
+            .fetch_one(&mut **conn)
+            .await
+            .map(|f: MangaJoinedView| f.into())
+            .map_err(Into::into)?
         )
     }
 
@@ -168,13 +166,15 @@ impl MangaView {
         conn: &mut Connection<Db>,
     ) -> Result<Vec<MangaView>, ErrorResponder> {
         Ok(
-            sqlx::query_as("SELECT manga_id, linked_id, manga.name, cover_url, last_updated, description, status, source.source_id, source.name as source_name from manga, source where manga.linked_id = ? AND manga.manga_id != ? AND manga.source_id = source.source_id")
-                .bind(linked_id)
-                .bind(id)
-                .fetch_all(&mut **conn)
-                .await
-                .map(|f: Vec<MangaJoinedView>| f.into_iter().map(|t| t.into()).collect())
-                .map_err(Into::into)?
+            sqlx::query_as!(
+                MangaJoinedView,
+                "SELECT manga_id as id, linked_id, manga.name, cover_url, last_updated, description, status, source.source_id, source.name as source_name from manga, source where manga.linked_id = ? AND manga.manga_id != ? AND manga.source_id = source.source_id",
+                linked_id, id
+            )
+            .fetch_all(&mut **conn)
+            .await
+            .map(|f: Vec<MangaJoinedView>| f.into_iter().map(|t| t.into()).collect())
+            .map_err(Into::into)?
         )
     }
 }

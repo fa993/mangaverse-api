@@ -1,14 +1,14 @@
 use std::collections::HashMap;
 
-use rocket::serde::{Deserialize, Serialize};
+use rocket::serde::Serialize;
 
-#[derive(Serialize, Deserialize, Default, Debug, sqlx::FromRow)]
+#[derive(Serialize, Default, Debug)]
 pub struct SourcePattern {
     url: String,
     source_id: String,
 }
 
-#[derive(Serialize, Deserialize, Default, Debug)]
+#[derive(Serialize, Default, Debug)]
 pub struct AllPatterns {
     pub patterns: HashMap<String, String>,
 }
@@ -16,7 +16,7 @@ pub struct AllPatterns {
 impl SourcePattern {
     pub async fn all(conn: &crate::Db) -> Result<AllPatterns, crate::routes::ErrorResponder> {
         Ok(AllPatterns {
-            patterns: sqlx::query_as("SELECT source_id, url from source_pattern")
+            patterns: sqlx::query_as!(SourcePattern, "SELECT source_id, url from source_pattern")
                 .fetch_all(&**conn)
                 .await
                 .map_err(Into::into)?
