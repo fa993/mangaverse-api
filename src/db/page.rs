@@ -1,13 +1,13 @@
-use crate::{
-    models::page::{ChapterPosition, PageURL},
-    routes::ErrorResponder,
-    Db,
-};
+use mangaverse_entity::models::page::{ChapterPosition, PageURL};
+use crate::{Db, routes::ErrorResponder};
 use rocket_db_pools::Connection;
 
-impl PageURL {
-    pub async fn assemble(
-        id: &str,
+use super::{Assemble, AssembleWithArgs};
+
+#[async_trait]
+impl Assemble for PageURL {
+    async fn assemble_many(
+        id: &'_ str,
         conn: &mut Connection<Db>,
     ) -> Result<Vec<PageURL>, ErrorResponder> {
         Ok(sqlx::query_as!(
@@ -25,9 +25,10 @@ struct DatabaseNum {
     pub num: i64,
 }
 
-impl ChapterPosition {
-    pub async fn assemble(
-        id: &str,
+#[async_trait]
+impl AssembleWithArgs<u32> for ChapterPosition {
+    async fn assemble_with_args<'a>(
+        id: &'_ str,
         seq: u32,
         conn: &mut Connection<Db>,
     ) -> Result<ChapterPosition, ErrorResponder> {

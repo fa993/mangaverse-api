@@ -1,9 +1,13 @@
-use crate::{models::source::MangaSource, routes::ErrorResponder, Db};
+use mangaverse_entity::models::source::MangaSource;
+use crate::{routes::ErrorResponder, Db};
 use rocket_db_pools::Connection;
 
-impl MangaSource {
-    pub async fn assemble(
-        id: &str,
+use super::Assemble;
+
+#[async_trait]
+impl Assemble for MangaSource {
+    async fn assemble(
+        id: &'_ str,
         conn: &mut Connection<Db>,
     ) -> Result<MangaSource, ErrorResponder> {
         Ok(

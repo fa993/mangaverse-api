@@ -28,12 +28,8 @@ pub mod v1 {
     use std::collections::HashMap;
     use std::sync::Arc;
 
-    use crate::models::genre::MangaGenre;
-    use crate::models::manga::{CompleteManga, LinkedManga};
-    use crate::models::page::{ChapterPosition, PageURL};
-    use crate::models::pattern::AllPatterns;
-    use crate::models::query::{MangaQuery, MangaQueryResponse, MangaRequest};
-    use crate::routes::ErrorResponder;
+    use mangaverse_entity::models::{genre::MangaGenre, manga::{CompleteManga, LinkedManga}, page::{ChapterPosition, PageURL}, pattern::AllPatterns, query::{MangaQuery, MangaQueryResponse, MangaRequest}};
+    use crate::{routes::ErrorResponder, db::{Assemble, AssembleWithArgs, AssembleWithArgsAndOutput}};
     use crate::Db;
     use rocket::serde::json::Json;
     use rocket::serde::uuid::Uuid;
@@ -77,7 +73,7 @@ pub mod v1 {
         mut conn: Connection<Db>,
         id: Uuid,
     ) -> Result<Json<Vec<PageURL>>, ErrorResponder> {
-        Ok(Json(PageURL::assemble(&id.to_string(), &mut conn).await?))
+        Ok(Json(PageURL::assemble_many(&id.to_string(), &mut conn).await?))
     }
 
     #[get("/chapter/position/<manga_id>/<sequence_number>")]
@@ -87,7 +83,7 @@ pub mod v1 {
         sequence_number: u32,
     ) -> Result<Json<ChapterPosition>, ErrorResponder> {
         Ok(Json(
-            ChapterPosition::assemble(&manga_id.to_string(), sequence_number, &mut conn).await?,
+            ChapterPosition::assemble_with_args(&manga_id.to_string(), sequence_number, &mut conn).await?,
         ))
     }
 
@@ -97,7 +93,7 @@ pub mod v1 {
         mut conn: Connection<Db>,
     ) -> Result<Json<MangaQueryResponse>, ErrorResponder> {
         Ok(Json(
-            MangaQueryResponse::assemble_query(query.0, &mut conn).await?,
+            MangaQueryResponse::assemble_with_args("", query.0, &mut conn).await?,
         ))
     }
 
@@ -107,7 +103,7 @@ pub mod v1 {
         mut conn: Connection<Db>,
     ) -> Result<Json<MangaQueryResponse>, ErrorResponder> {
         Ok(Json(
-            MangaQueryResponse::assemble_home(query.0, &mut conn).await?,
+            MangaQueryResponse::all_with_args_and_output(query.0, &mut conn).await?,
         ))
     }
 

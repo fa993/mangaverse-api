@@ -2,7 +2,7 @@ use crate::{routes::ErrorResponder, Db};
 use chrono::NaiveDateTime;
 use rocket_db_pools::Connection;
 
-use crate::models::{
+use mangaverse_entity::models::{
     author::MangaAuthor,
     chapter::MangaChapter,
     genre::MangaGenre,
@@ -10,8 +10,11 @@ use crate::models::{
     source::MangaSource,
 };
 
-impl CompleteManga {
-    pub async fn assemble(
+use super::{Assemble, AssembleWithArgs, author::{ArtistOption, AuthorOption}};
+
+#[async_trait]
+impl Assemble for CompleteManga {
+    async fn assemble(
         id: &str,
         conn: &mut Connection<Db>,
     ) -> Result<CompleteManga, ErrorResponder> {
@@ -20,55 +23,63 @@ impl CompleteManga {
         let ret = MainManga::assemble(id, conn).await?;
 
         mng.related =
-            LinkedManga::assemble_all(&ret.manga_view.linked_id, &ret.manga_view.id, conn).await?;
+            LinkedManga::all_with_args((&ret.manga_view.id, &ret.manga_view.linked_id), conn).await?;
         mng.main = ret;
 
         Ok(mng)
     }
 }
 
-impl MainManga {
-    pub async fn assemble(
+#[async_trait]
+impl Assemble for MainManga {
+    async fn assemble(
         id: &str,
         conn: &mut Connection<Db>,
     ) -> Result<MainManga, ErrorResponder> {
         let mut ret = MainManga::default();
 
         ret.manga_view = MangaView::assemble(id, conn).await?;
-        ret.genres = MangaGenre::assemble(id, conn).await?;
-        ret.authors = MangaAuthor::assemble_author(&id, conn).await?;
-        ret.artists = MangaAuthor::assemble_artist(&id, conn).await?;
+        ret.genres = MangaGenre::assemble_many(id, conn).await?;
+        ret.authors = MangaAuthor::assemble_many_with_args(&id, AuthorOption, conn).await?;
+        ret.artists = MangaAuthor::assemble_many_with_args(&id, ArtistOption, conn).await?;
 
-        ret.chapters = MangaChapter::assemble(&id, conn).await?;
+        ret.chapters = MangaChapter::assemble_many(&id, conn).await?;
 
         Ok(ret)
     }
 }
 
-impl LinkedManga {
-    pub async fn assemble(
+#[async_trait]
+impl Assemble for LinkedManga {
+    async fn assemble(
         id: &str,
         conn: &mut Connection<Db>,
     ) -> Result<LinkedManga, ErrorResponder> {
         let mut ret = LinkedManga::default();
 
         ret.manga_view = MangaView::assemble(id, conn).await?;
-        ret.chapters = MangaChapter::assemble(id, conn).await?;
+        ret.chapters = MangaChapter::assemble_many(id, conn).await?;
 
         Ok(ret)
     }
 
-    pub async fn assemble_all(
-        linked_id: &str,
-        id: &str,
+}
+
+#[async_trait]
+impl AssembleWithArgs<(&'_ str, &'_ str)> for LinkedManga {
+    
+    async fn all_with_args<'a>(
+        ids: (&'a str, &'a str),
         conn: &mut Connection<Db>,
     ) -> Result<Vec<LinkedManga>, ErrorResponder> {
-        let all = MangaView::assemble_linked(&linked_id, &id, conn).await?;
+        let id = ids.0;
+        let linked_id = ids.1;
+        let all = MangaView::assemble_many_with_args(&id, &linked_id, conn).await?;
 
         let mut ret = Vec::new();
 
         for i in all {
-            let y = MangaChapter::assemble(&i.id, conn).await?;
+            let y = MangaChapter::assemble_many(&i.id, conn).await?;
             ret.push(LinkedManga {
                 manga_view: i,
                 chapters: y,
@@ -77,6 +88,7 @@ impl LinkedManga {
 
         Ok(ret)
     }
+
 }
 
 struct MangaJoinedView {
@@ -109,8 +121,9 @@ impl From<MangaJoinedView> for MangaView {
     }
 }
 
-impl MangaView {
-    pub async fn assemble(
+#[async_trait]
+impl Assemble for MangaView {
+    async fn assemble(
         id: &str,
         conn: &mut Connection<Db>,
     ) -> Result<MangaView, ErrorResponder> {
@@ -126,10 +139,13 @@ impl MangaView {
             .map_err(Into::into)?
         )
     }
+}
 
-    pub async fn assemble_linked(
-        linked_id: &str,
-        id: &str,
+#[async_trait]
+impl AssembleWithArgs<&'_ str> for MangaView {
+    async fn assemble_many_with_args<'a>(
+        id: &'_ str,
+        linked_id: &'a str,
         conn: &mut Connection<Db>,
     ) -> Result<Vec<MangaView>, ErrorResponder> {
         Ok(

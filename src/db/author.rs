@@ -1,9 +1,17 @@
-use crate::{models::author::MangaAuthor, routes::ErrorResponder, Db};
+use mangaverse_entity::models::author::MangaAuthor;
+use crate::{routes::ErrorResponder, Db};
 use rocket_db_pools::Connection;
 
-impl MangaAuthor {
-    pub async fn assemble_author(
-        id: &str,
+use super::AssembleWithArgs;
+
+pub struct AuthorOption;
+pub struct ArtistOption;
+
+#[async_trait]
+impl AssembleWithArgs<AuthorOption> for MangaAuthor {
+    async fn assemble_many_with_args<'a>(
+        id: &'_ str,
+        _: AuthorOption,
         conn: &mut Connection<Db>,
     ) -> Result<Vec<MangaAuthor>, ErrorResponder> {
         Ok(
@@ -17,9 +25,13 @@ impl MangaAuthor {
             .map_err(Into::into)?
         )
     }
+}
 
-    pub async fn assemble_artist(
+#[async_trait]
+impl AssembleWithArgs<ArtistOption> for MangaAuthor {
+    async fn assemble_many_with_args<'a>(
         id: &str,
+        _: ArtistOption,
         conn: &mut Connection<Db>,
     ) -> Result<Vec<MangaAuthor>, ErrorResponder> {
         Ok(

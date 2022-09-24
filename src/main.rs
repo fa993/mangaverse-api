@@ -1,8 +1,9 @@
 pub mod db;
-pub mod models;
+// pub mod models;
 pub mod routes;
 
-use models::{genre::MangaGenre, pattern::SourcePattern};
+use db::{AssembleWithOutput, Assemble};
+use mangaverse_entity::models::{genre::MangaGenre, pattern::SourcePattern};
 use rocket::fairing::AdHoc;
 use rocket_db_pools::{sqlx, Database};
 
@@ -24,7 +25,7 @@ fn rocket() -> _ {
             let data = MangaGenre::all(dbs)
                 .await
                 .expect("Error while fetching genres");
-            let patterns = SourcePattern::all(dbs)
+            let patterns = SourcePattern::all_with_output(dbs)
                 .await
                 .expect("Error while fetching patterns");
             rocket

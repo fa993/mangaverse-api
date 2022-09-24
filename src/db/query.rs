@@ -1,9 +1,7 @@
-use crate::{
-    models::query::{MangaHeading, MangaQuery, MangaQueryResponse},
-    routes::ErrorResponder,
-    Db,
-};
+use mangaverse_entity::models::query::{MangaHeading, MangaQuery, MangaQueryResponse};
+use crate::{Db, routes::ErrorResponder};
 use rocket_db_pools::Connection;
+use super::{AssembleWithArgs, AssembleWithArgsAndOutput};
 
 #[derive(sqlx::FromRow)]
 struct MangaHeadingFromRow {
@@ -26,8 +24,21 @@ impl Into<MangaHeading> for MangaHeadingFromRow {
     }
 }
 
-impl MangaQueryResponse {
-    pub async fn assemble_query(
+fn generate_str(genre: &mut [String]) -> String {
+    genre.into_iter().for_each(|f| {
+        f.insert(0, '"');
+        f.push('"');
+    });
+    let mut st = genre.join(",");
+    st.insert(0, '(');
+    st.push(')');
+    st
+}
+
+#[async_trait]
+impl AssembleWithArgs<MangaQuery> for MangaQueryResponse {
+    async fn assemble_with_args<'a>(
+        _: &'_ str,
         query: MangaQuery,
         conn: &mut Connection<Db>,
     ) -> Result<MangaQueryResponse, ErrorResponder> {
@@ -74,18 +85,12 @@ impl MangaQueryResponse {
         }
     }
 
-    fn generate_str(genre: &mut [String]) -> String {
-        genre.into_iter().for_each(|f| {
-            f.insert(0, '"');
-            f.push('"');
-        });
-        let mut st = genre.join(",");
-        st.insert(0, '(');
-        st.push(')');
-        st
-    }
+}
 
-    pub async fn assemble_home(
+#[async_trait]
+impl AssembleWithArgsAndOutput<MangaQuery, MangaQueryResponse> for MangaQueryResponse {
+
+    async fn all_with_args_and_output<'a>(
         mut query: MangaQuery,
         conn: &mut Connection<Db>,
     ) -> Result<MangaQueryResponse, ErrorResponder> {
@@ -105,7 +110,7 @@ impl MangaQueryResponse {
         } else {
             let vec_len = (query.genre_ids.len() as u32).clone();
             let ret: Vec<MangaHeadingFromRow> = sqlx::query_as(
-                &("select manga_listing.manga_id as id, manga_listing.name as name, manga_listing.cover_url as cover_url, manga_listing.description_small as small_description, manga_listing.genres as genres from manga, manga_listing, manga_genre where manga.manga_id = manga_genre.manga_id AND manga.manga_id = manga_listing.manga_id AND manga_genre.genre_id IN ".to_string() + &MangaQueryResponse::generate_str(query.genre_ids.as_mut_slice()) + " AND manga.is_main = 1 AND manga.is_old = false group by manga.manga_id HAVING count(*) = ? order by manga.name ASC limit ?, ?"),
+                &("select manga_listing.manga_id as id, manga_listing.name as name, manga_listing.cover_url as cover_url, manga_listing.description_small as small_description, manga_listing.genres as genres from manga, manga_listing, manga_genre where manga.manga_id = manga_genre.manga_id AND manga.manga_id = manga_listing.manga_id AND manga_genre.genre_id IN ".to_string() + &generate_str(query.genre_ids.as_mut_slice()) + " AND manga.is_main = 1 AND manga.is_old = false group by manga.manga_id HAVING count(*) = ? order by manga.name ASC limit ?, ?"),
             )
             .bind(vec_len)
             .bind(query.offset)
@@ -119,4 +124,5 @@ impl MangaQueryResponse {
             })
         }
     }
+
 }

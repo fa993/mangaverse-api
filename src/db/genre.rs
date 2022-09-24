@@ -1,8 +1,12 @@
-use crate::{models::genre::MangaGenre, routes::ErrorResponder, Db};
+use mangaverse_entity::models::genre::MangaGenre;
+use crate::{Db, routes::ErrorResponder};
 use rocket_db_pools::Connection;
 
-impl MangaGenre {
-    pub async fn assemble(
+use super::Assemble;
+
+#[async_trait]
+impl Assemble for MangaGenre {
+    async fn assemble_many(
         id: &str,
         conn: &mut Connection<Db>,
     ) -> Result<Vec<MangaGenre>, ErrorResponder> {
@@ -18,7 +22,7 @@ impl MangaGenre {
         )
     }
 
-    pub async fn all(conn: &Db) -> Result<Vec<MangaGenre>, ErrorResponder> {
+    async fn all(conn: &Db) -> Result<Vec<MangaGenre>, ErrorResponder> {
         Ok(sqlx::query_as!(
             MangaGenre,
             "SELECT genre.genre_id as id, genre.name from genre order by genre.name ASC",

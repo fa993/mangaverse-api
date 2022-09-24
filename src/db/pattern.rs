@@ -1,7 +1,11 @@
-use crate::models::pattern::{AllPatterns, SourcePattern};
+use mangaverse_entity::models::pattern::{AllPatterns, SourcePattern};
+use crate::{Db, routes::ErrorResponder};
 
-impl SourcePattern {
-    pub async fn all(conn: &crate::Db) -> Result<AllPatterns, crate::routes::ErrorResponder> {
+use super::AssembleWithOutput;
+
+#[async_trait]
+impl AssembleWithOutput<AllPatterns> for SourcePattern {
+    async fn all_with_output(conn: &Db) -> Result<AllPatterns, ErrorResponder> {
         Ok(AllPatterns {
             patterns: sqlx::query_as!(SourcePattern, "SELECT source_id, url from source_pattern")
                 .fetch_all(&**conn)

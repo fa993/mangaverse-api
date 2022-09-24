@@ -1,9 +1,13 @@
-use crate::{models::chapter::MangaChapter, routes::ErrorResponder, Db};
+use mangaverse_entity::models::chapter::MangaChapter;
+use crate::{routes::ErrorResponder, Db};
 use rocket_db_pools::Connection;
 
-impl MangaChapter {
-    pub async fn assemble(
-        id: &str,
+use super::Assemble;
+
+#[async_trait]
+impl Assemble for MangaChapter {
+    async fn assemble_many(
+        id: &'_ str,
         conn: &mut Connection<Db>,
     ) -> Result<Vec<MangaChapter>, ErrorResponder> {
         Ok(
