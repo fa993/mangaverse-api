@@ -13,7 +13,7 @@ async-trait = "0.1.57"
 
 
 [dependencies.sqlx]
-version = "0.5.1"
+version = "0.5.13"
 features = ["uuid", "chrono", "macros"]
 
 [dependencies.rocket_db_pools]
