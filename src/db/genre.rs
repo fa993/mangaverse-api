@@ -1,18 +1,18 @@
-use mangaverse_entity::models::genre::MangaGenre;
+use mangaverse_entity::models::genre::Genre;
 use crate::{Db, routes::ErrorResponder};
 use rocket_db_pools::Connection;
 
 use super::Assemble;
 
 #[async_trait]
-impl Assemble for MangaGenre {
+impl Assemble for Genre {
     async fn assemble_many(
         id: &str,
         conn: &mut Connection<Db>,
-    ) -> Result<Vec<MangaGenre>, ErrorResponder> {
+    ) -> Result<Vec<Genre>, ErrorResponder> {
         Ok(
             sqlx::query_as!(
-                MangaGenre,
+                Genre,
                 "SELECT genre.genre_id as id, genre.name from manga, manga_genre, genre where manga.manga_id = ? AND manga.manga_id = manga_genre.manga_id AND manga_genre.genre_id = genre.genre_id",
                 id
             )
@@ -22,9 +22,9 @@ impl Assemble for MangaGenre {
         )
     }
 
-    async fn all(conn: &Db) -> Result<Vec<MangaGenre>, ErrorResponder> {
+    async fn all(conn: &Db) -> Result<Vec<Genre>, ErrorResponder> {
         Ok(sqlx::query_as!(
-            MangaGenre,
+            Genre,
             "SELECT genre.genre_id as id, genre.name from genre order by genre.name ASC",
         )
         .fetch_all(&**conn)

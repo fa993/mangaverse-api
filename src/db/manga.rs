@@ -3,9 +3,9 @@ use chrono::NaiveDateTime;
 use rocket_db_pools::Connection;
 
 use mangaverse_entity::models::{
-    author::MangaAuthor,
+    author::Author,
     chapter::MangaChapter,
-    genre::MangaGenre,
+    genre::Genre,
     manga::{CompleteManga, LinkedManga, MainManga, MangaView},
     source::MangaSource,
 };
@@ -39,9 +39,9 @@ impl Assemble for MainManga {
         let mut ret = MainManga::default();
 
         ret.manga_view = MangaView::assemble(id, conn).await?;
-        ret.genres = MangaGenre::assemble_many(id, conn).await?;
-        ret.authors = MangaAuthor::assemble_many_with_args(&id, AuthorOption, conn).await?;
-        ret.artists = MangaAuthor::assemble_many_with_args(&id, ArtistOption, conn).await?;
+        ret.genres = Genre::assemble_many(id, conn).await?;
+        ret.authors = Author::assemble_many_with_args(&id, AuthorOption, conn).await?;
+        ret.artists = Author::assemble_many_with_args(&id, ArtistOption, conn).await?;
 
         ret.chapters = MangaChapter::assemble_many(&id, conn).await?;
 

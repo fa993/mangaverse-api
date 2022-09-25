@@ -843,7 +843,7 @@ dependencies = [
 
 [[package]]
 name = "mangaverse-api"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "async-trait",
  "chrono",
@@ -856,8 +856,8 @@ dependencies = [
 
 [[package]]
 name = "mangaverse-entity"
-version = "0.2.0"
-source = "git+https://github.com/fa993/mangaverse-entity?rev=a2c11c8#a2c11c88cff07ded46df73d82856e219b44b3737"
+version = "0.3.0"
+source = "git+https://github.com/fa993/mangaverse-entity?rev=426c47b#426c47b72c23cb9a4c0528f19e604c64112b3e32"
 dependencies = [
  "chrono",
  "serde",

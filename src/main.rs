@@ -3,7 +3,7 @@ pub mod db;
 pub mod routes;
 
 use db::{AssembleWithOutput, Assemble};
-use mangaverse_entity::models::{genre::MangaGenre, pattern::SourcePattern};
+use mangaverse_entity::models::{genre::Genre, pattern::SourcePattern};
 use rocket::fairing::AdHoc;
 use rocket_db_pools::{sqlx, Database};
 
@@ -22,7 +22,7 @@ fn rocket() -> _ {
         .attach(Db::init())
         .attach(AdHoc::on_ignite("populate state", |rocket| async {
             let dbs = Db::fetch(&rocket).expect("No db");
-            let data = MangaGenre::all(dbs)
+            let data = Genre::all(dbs)
                 .await
                 .expect("Error while fetching genres");
             let patterns = SourcePattern::all_with_output(dbs)

@@ -28,7 +28,7 @@ pub mod v1 {
     use std::collections::HashMap;
     use std::sync::Arc;
 
-    use mangaverse_entity::models::{genre::MangaGenre, manga::{CompleteManga, LinkedManga}, page::{ChapterPosition, PageURL}, pattern::AllPatterns, query::{MangaQuery, MangaQueryResponse, MangaRequest}};
+    use mangaverse_entity::models::{genre::Genre, manga::{CompleteManga, LinkedManga}, page::{ChapterPosition, PageURL}, pattern::AllPatterns, query::{MangaQuery, MangaQueryResponse, MangaRequest}};
     use crate::{routes::ErrorResponder, db::{Assemble, AssembleWithArgs, AssembleWithArgsAndOutput}};
     use crate::Db;
     use rocket::serde::json::Json;
@@ -63,8 +63,8 @@ pub mod v1 {
 
     #[get("/genres")]
     pub async fn get_all_genres(
-        genres: &State<Arc<Vec<MangaGenre>>>,
-    ) -> Result<Json<&[MangaGenre]>, ErrorResponder> {
+        genres: &State<Arc<Vec<Genre>>>,
+    ) -> Result<Json<&[Genre]>, ErrorResponder> {
         Ok(Json(genres.inner().as_slice()))
     }
 
