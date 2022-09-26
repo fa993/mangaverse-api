@@ -15,7 +15,7 @@ mangaverse-entity = {git = "https://github.com/fa993/mangaverse-entity", rev = "
 
 [dependencies.sqlx]
 version = "0.5.13"
-features = ["uuid", "chrono", "macros"]
+features = ["chrono", "macros"]
 
 [dependencies.rocket_db_pools]
 version = "0.1.0-rc.2"
