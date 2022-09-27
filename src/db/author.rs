@@ -1,5 +1,5 @@
-use mangaverse_entity::models::author::Author;
 use crate::{routes::ErrorResponder, Db};
+use mangaverse_entity::models::author::Author;
 use rocket_db_pools::Connection;
 
 use super::AssembleWithArgs;

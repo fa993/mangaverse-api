@@ -10,7 +10,10 @@ use mangaverse_entity::models::{
     source::MangaSource,
 };
 
-use super::{Assemble, AssembleWithArgs, author::{ArtistOption, AuthorOption}};
+use super::{
+    author::{ArtistOption, AuthorOption},
+    Assemble, AssembleWithArgs,
+};
 
 #[async_trait]
 impl Assemble for CompleteManga {
@@ -23,7 +26,8 @@ impl Assemble for CompleteManga {
         let ret = MainManga::assemble(id, conn).await?;
 
         mng.related =
-            LinkedManga::all_with_args((&ret.manga_view.id, &ret.manga_view.linked_id), conn).await?;
+            LinkedManga::all_with_args((&ret.manga_view.id, &ret.manga_view.linked_id), conn)
+                .await?;
         mng.main = ret;
 
         Ok(mng)
@@ -32,10 +36,7 @@ impl Assemble for CompleteManga {
 
 #[async_trait]
 impl Assemble for MainManga {
-    async fn assemble(
-        id: &str,
-        conn: &mut Connection<Db>,
-    ) -> Result<MainManga, ErrorResponder> {
+    async fn assemble(id: &str, conn: &mut Connection<Db>) -> Result<MainManga, ErrorResponder> {
         let mut ret = MainManga::default();
 
         ret.manga_view = MangaView::assemble(id, conn).await?;
@@ -51,10 +52,7 @@ impl Assemble for MainManga {
 
 #[async_trait]
 impl Assemble for LinkedManga {
-    async fn assemble(
-        id: &str,
-        conn: &mut Connection<Db>,
-    ) -> Result<LinkedManga, ErrorResponder> {
+    async fn assemble(id: &str, conn: &mut Connection<Db>) -> Result<LinkedManga, ErrorResponder> {
         let mut ret = LinkedManga::default();
 
         ret.manga_view = MangaView::assemble(id, conn).await?;
@@ -62,12 +60,10 @@ impl Assemble for LinkedManga {
 
         Ok(ret)
     }
-
 }
 
 #[async_trait]
 impl AssembleWithArgs<(&'_ str, &'_ str)> for LinkedManga {
-    
     async fn all_with_args<'a>(
         ids: (&'a str, &'a str),
         conn: &mut Connection<Db>,
@@ -88,7 +84,6 @@ impl AssembleWithArgs<(&'_ str, &'_ str)> for LinkedManga {
 
         Ok(ret)
     }
-
 }
 
 struct MangaJoinedView {
@@ -123,10 +118,7 @@ impl From<MangaJoinedView> for MangaView {
 
 #[async_trait]
 impl Assemble for MangaView {
-    async fn assemble(
-        id: &str,
-        conn: &mut Connection<Db>,
-    ) -> Result<MangaView, ErrorResponder> {
+    async fn assemble(id: &str, conn: &mut Connection<Db>) -> Result<MangaView, ErrorResponder> {
         Ok(
             sqlx::query_as!(
                 MangaJoinedView,

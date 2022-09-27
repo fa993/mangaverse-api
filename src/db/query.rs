@@ -1,7 +1,7 @@
-use mangaverse_entity::models::query::{MangaHeading, MangaQuery, MangaQueryResponse};
-use crate::{Db, routes::ErrorResponder};
-use rocket_db_pools::Connection;
 use super::{AssembleWithArgs, AssembleWithArgsAndOutput};
+use crate::{routes::ErrorResponder, Db};
+use mangaverse_entity::models::query::{MangaHeading, MangaQuery, MangaQueryResponse};
+use rocket_db_pools::Connection;
 
 #[derive(sqlx::FromRow)]
 struct MangaHeadingFromRow {
@@ -84,12 +84,10 @@ impl AssembleWithArgs<MangaQuery> for MangaQueryResponse {
             })
         }
     }
-
 }
 
 #[async_trait]
 impl AssembleWithArgsAndOutput<MangaQuery, MangaQueryResponse> for MangaQueryResponse {
-
     async fn all_with_args_and_output<'a>(
         mut query: MangaQuery,
         conn: &mut Connection<Db>,
@@ -124,5 +122,4 @@ impl AssembleWithArgsAndOutput<MangaQuery, MangaQueryResponse> for MangaQueryRes
             })
         }
     }
-
 }

@@ -1,5 +1,5 @@
+use crate::{routes::ErrorResponder, Db};
 use mangaverse_entity::models::genre::Genre;
-use crate::{Db, routes::ErrorResponder};
 use rocket_db_pools::Connection;
 
 use super::Assemble;

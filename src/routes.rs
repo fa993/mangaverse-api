@@ -28,9 +28,17 @@ pub mod v1 {
     use std::collections::HashMap;
     use std::sync::Arc;
 
-    use mangaverse_entity::models::{genre::Genre, manga::{CompleteManga, LinkedManga}, page::{ChapterPosition, PageURL}, pattern::AllPatterns, query::{MangaQuery, MangaQueryResponse, MangaRequest}};
-    use crate::{routes::ErrorResponder, db::{Assemble, AssembleWithArgs, AssembleWithArgsAndOutput}};
     use crate::Db;
+    use crate::{
+        db::{Assemble, AssembleWithArgs, AssembleWithArgsAndOutput},
+        routes::ErrorResponder,
+    };
+    use mangaverse_entity::models::{
+        genre::Genre,
+        manga::{CompleteManga, LinkedManga},
+        page::{ChapterPosition, PageURL},
+        query::{MangaQuery, MangaQueryResponse, MangaRequest},
+    };
     use rocket::serde::json::Json;
     use rocket::serde::uuid::Uuid;
     use rocket::State;
@@ -73,7 +81,9 @@ pub mod v1 {
         mut conn: Connection<Db>,
         id: Uuid,
     ) -> Result<Json<Vec<PageURL>>, ErrorResponder> {
-        Ok(Json(PageURL::assemble_many(&id.to_string(), &mut conn).await?))
+        Ok(Json(
+            PageURL::assemble_many(&id.to_string(), &mut conn).await?,
+        ))
     }
 
     #[get("/chapter/position/<manga_id>/<sequence_number>")]
@@ -83,7 +93,8 @@ pub mod v1 {
         sequence_number: u32,
     ) -> Result<Json<ChapterPosition>, ErrorResponder> {
         Ok(Json(
-            ChapterPosition::assemble_with_args(&manga_id.to_string(), sequence_number, &mut conn).await?,
+            ChapterPosition::assemble_with_args(&manga_id.to_string(), sequence_number, &mut conn)
+                .await?,
         ))
     }
 
@@ -109,10 +120,9 @@ pub mod v1 {
 
     #[get("/currentSources")]
     pub async fn get_source_patterns(
-        patterns: &State<Arc<AllPatterns>>,
-    ) -> Result<Json<HashMap<String, String>>, ErrorResponder> {
-        let pts: HashMap<String, String> = patterns.inner().patterns.clone();
-        Ok(Json(pts))
+        patterns: &State<Arc<HashMap<String, String>>>,
+    ) -> Result<Json<&HashMap<String, String>>, ErrorResponder> {
+        Ok(Json(patterns))
     }
 
     #[post("/insert", data = "<_req>")]
