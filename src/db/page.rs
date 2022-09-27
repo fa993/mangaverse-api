@@ -16,8 +16,7 @@ impl Assemble for PageURL {
             id
         )
         .fetch_all(&mut **conn)
-        .await
-        .map_err(Into::into)?)
+        .await?)
     }
 }
 
@@ -38,8 +37,7 @@ impl AssembleWithArgs<u32> for ChapterPosition {
                 id, seq
             )
             .fetch_one(&mut **conn)
-            .await
-            .map_err(Into::into)?;
+            .await?;
 
         let len : DatabaseNum = sqlx::query_as!(
                 DatabaseNum,
@@ -47,8 +45,7 @@ impl AssembleWithArgs<u32> for ChapterPosition {
                 id
             )
             .fetch_one(&mut **conn)
-            .await
-            .map_err(Into::into)?;
+            .await?;
 
         Ok(ChapterPosition {
             index: idx.num,

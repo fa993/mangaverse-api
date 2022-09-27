@@ -17,8 +17,8 @@ impl Assemble for MangaChapter {
                 id
             )
             .fetch_all(&mut **conn)
-            .await
-            .map_err(Into::into)?
+            .await?
+
         )
     }
 }

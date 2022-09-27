@@ -17,8 +17,7 @@ impl Assemble for MangaSource {
                 id
             )
             .fetch_one(&mut **conn)
-            .await
-            .map_err(Into::into)?
+            .await?
         )
     }
 }

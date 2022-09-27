@@ -1,24 +1,13 @@
-use std::convert::Infallible;
-
 #[derive(Responder, Debug)]
 #[response(status = 500, content_type = "json")]
 pub struct ErrorResponder {
     pub message: String,
 }
 
-#[allow(clippy::from_over_into)]
-impl Into<ErrorResponder> for sqlx::Error {
-    fn into(self) -> ErrorResponder {
+impl From<sqlx::Error> for ErrorResponder {
+    fn from(a: sqlx::Error) -> Self {
         ErrorResponder {
-            message: self.to_string(),
-        }
-    }
-}
-
-impl Into<ErrorResponder> for Infallible {
-    fn into(self) -> ErrorResponder {
-        ErrorResponder {
-            message: self.to_string(),
+            message: a.to_string(),
         }
     }
 }

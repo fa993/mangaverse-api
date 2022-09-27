@@ -127,8 +127,7 @@ impl Assemble for MangaView {
             )
             .fetch_one(&mut **conn)
             .await
-            .map(|f: MangaJoinedView| f.into())
-            .map_err(Into::into)?
+            .map(|f: MangaJoinedView| f.into())?
         )
     }
 }
@@ -147,9 +146,9 @@ impl AssembleWithArgs<&'_ str> for MangaView {
                 linked_id, id
             )
             .fetch_all(&mut **conn)
-            .await
-            .map(|f: Vec<MangaJoinedView>| f.into_iter().map(|t| t.into()).collect())
-            .map_err(Into::into)?
+            .await?
+            .into_iter().map(Into::into)
+            .collect()
         )
     }
 }

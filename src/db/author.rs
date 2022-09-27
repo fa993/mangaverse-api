@@ -21,8 +21,7 @@ impl AssembleWithArgs<AuthorOption> for Author {
                 id
             )
             .fetch_all(&mut **conn)
-            .await
-            .map_err(Into::into)?
+            .await?
         )
     }
 }
@@ -41,8 +40,7 @@ impl AssembleWithArgs<ArtistOption> for Author {
                 id
             )
             .fetch_all(&mut **conn)
-            .await
-            .map_err(Into::into)?
+            .await?
         )
     }
 }

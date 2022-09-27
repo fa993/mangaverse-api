@@ -54,8 +54,7 @@ impl AssembleWithArgs<MangaQuery> for MangaQueryResponse {
                 q_str, query.offset, query.limit
             )
             .fetch_all(&mut **conn)
-            .await
-            .map_err(Into::into)?;
+            .await?;
             Ok(MangaQueryResponse {
                 query,
                 headings: ret,
@@ -72,8 +71,7 @@ impl AssembleWithArgs<MangaQuery> for MangaQueryResponse {
                 q_str, t, q_str, query.offset, query.limit
             )
             .fetch_all(&mut **conn)
-            .await
-            .map_err(Into::into)?;
+            .await?;
             Ok(MangaQueryResponse {
                 query,
                 headings: ret,
@@ -99,8 +97,7 @@ impl AssembleWithArgsAndOutput<MangaQuery, MangaQueryResponse> for MangaQueryRes
                 query.offset, query.limit
             )
             .fetch_all(&mut **conn)
-            .await
-            .map_err(Into::into)?;
+            .await?;
             Ok(MangaQueryResponse {
                 query,
                 headings: ret,
@@ -114,8 +111,7 @@ impl AssembleWithArgsAndOutput<MangaQuery, MangaQueryResponse> for MangaQueryRes
             .bind(query.offset)
             .bind(query.limit)
             .fetch_all(&mut **conn)
-            .await
-            .map_err(Into::into)?;
+            .await?;
             Ok(MangaQueryResponse {
                 query,
                 headings: ret.into_iter().map(Into::into).collect(),

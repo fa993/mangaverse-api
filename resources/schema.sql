@@ -127,7 +127,7 @@ CREATE TABLE `manga` (
   `is_listed` tinyint(1) NOT NULL,
   `name` varchar(255) NOT NULL,
   `cover_url` varchar(2048) NOT NULL,
-  `url` varchar(2048) CHARACTER SET ascii DEFAULT NULL,
+  `url` varchar(2048) CHARACTER SET ascii NOT NULL,
   `last_updated` datetime DEFAULT NULL,
   `status` varchar(255) NOT NULL,
   `is_main` tinyint(1) DEFAULT NULL,
@@ -287,4 +287,4 @@ CREATE TABLE `title` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2022-09-26 10:15:09
+-- Dump completed on 2022-09-27 14:03:36

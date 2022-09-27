@@ -17,8 +17,7 @@ impl Assemble for Genre {
                 id
             )
             .fetch_all(&mut **conn)
-            .await
-            .map_err(Into::into)?
+            .await?
         )
     }
 
@@ -28,7 +27,6 @@ impl Assemble for Genre {
             "SELECT genre.genre_id as id, genre.name from genre order by genre.name ASC",
         )
         .fetch_all(&**conn)
-        .await
-        .map_err(Into::into)?)
+        .await?)
     }
 }

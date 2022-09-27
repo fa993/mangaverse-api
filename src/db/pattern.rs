@@ -11,8 +11,7 @@ impl AssembleWithOutput<HashMap<String, String>> for SourcePattern {
         Ok(
             sqlx::query_as!(SourcePattern, "SELECT source_id, url from source_pattern")
                 .fetch_all(&**conn)
-                .await
-                .map_err(Into::into)?
+                .await?
                 .into_iter()
                 .map(|t: SourcePattern| (t.url, t.source_id))
                 .collect(),
