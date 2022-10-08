@@ -12,20 +12,20 @@ struct MangaHeadingFromRow {
     small_description: String,
 }
 
-impl Into<MangaHeading> for MangaHeadingFromRow {
-    fn into(self) -> MangaHeading {
+impl From<MangaHeadingFromRow> for MangaHeading {
+    fn from(a: MangaHeadingFromRow) -> Self {
         MangaHeading {
-            id: self.id,
-            name: self.name,
-            cover_url: self.cover_url,
-            genres: self.genres,
-            small_description: self.small_description,
+            id: a.id,
+            name: a.name,
+            cover_url: a.cover_url,
+            genres: a.genres,
+            small_description: a.small_description,
         }
     }
 }
 
 fn generate_str(genre: &mut [String]) -> String {
-    genre.into_iter().for_each(|f| {
+    genre.iter_mut().for_each(|f| {
         f.insert(0, '"');
         f.push('"');
     });
@@ -44,7 +44,7 @@ impl AssembleWithArgs<MangaQuery> for MangaQueryResponse {
     ) -> Result<MangaQueryResponse, ErrorResponder> {
         if query.preferred_source_id.is_none() {
             let mut q_str = String::from('%');
-            q_str.push_str(&query.name.as_ref().ok_or(ErrorResponder {
+            q_str.push_str(query.name.as_ref().ok_or(ErrorResponder {
                 message: "No Name found".to_string(),
             })?);
             q_str.push('%');
@@ -61,7 +61,7 @@ impl AssembleWithArgs<MangaQuery> for MangaQueryResponse {
             })
         } else if let Some(t) = &query.preferred_source_id {
             let mut q_str = String::from('%');
-            q_str.push_str(&query.name.as_ref().ok_or(ErrorResponder {
+            q_str.push_str(query.name.as_ref().ok_or(ErrorResponder {
                 message: "No Name found".to_string(),
             })?);
             q_str.push('%');
@@ -103,7 +103,7 @@ impl AssembleWithArgsAndOutput<MangaQuery, MangaQueryResponse> for MangaQueryRes
                 headings: ret,
             })
         } else {
-            let vec_len = (query.genre_ids.len() as u32).clone();
+            let vec_len = query.genre_ids.len() as u32;
             let ret: Vec<MangaHeadingFromRow> = sqlx::query_as(
                 &("select manga_listing.manga_id as id, manga_listing.name as name, manga_listing.cover_url as cover_url, manga_listing.description_small as small_description, manga_listing.genres as genres from manga, manga_listing, manga_genre where manga.manga_id = manga_genre.manga_id AND manga.manga_id = manga_listing.manga_id AND manga_genre.genre_id IN ".to_string() + &generate_str(query.genre_ids.as_mut_slice()) + " AND manga.is_main = 1 AND manga.is_old = false group by manga.manga_id HAVING count(*) = ? order by manga.name ASC limit ?, ?"),
             )

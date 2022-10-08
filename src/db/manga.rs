@@ -37,28 +37,23 @@ impl Assemble for CompleteManga {
 #[async_trait]
 impl Assemble for MainManga {
     async fn assemble(id: &str, conn: &mut Connection<Db>) -> Result<MainManga, ErrorResponder> {
-        let mut ret = MainManga::default();
-
-        ret.manga_view = MangaView::assemble(id, conn).await?;
-        ret.genres = Genre::assemble_many(id, conn).await?;
-        ret.authors = Author::assemble_many_with_args(&id, AuthorOption, conn).await?;
-        ret.artists = Author::assemble_many_with_args(&id, ArtistOption, conn).await?;
-
-        ret.chapters = MangaChapter::assemble_many(&id, conn).await?;
-
-        Ok(ret)
+        Ok(MainManga {
+            manga_view: MangaView::assemble(id, conn).await?,
+            genres: Genre::assemble_many(id, conn).await?,
+            authors: Author::assemble_many_with_args(id, AuthorOption, conn).await?,
+            artists: Author::assemble_many_with_args(id, ArtistOption, conn).await?,
+            chapters: MangaChapter::assemble_many(id, conn).await?,
+        })
     }
 }
 
 #[async_trait]
 impl Assemble for LinkedManga {
     async fn assemble(id: &str, conn: &mut Connection<Db>) -> Result<LinkedManga, ErrorResponder> {
-        let mut ret = LinkedManga::default();
-
-        ret.manga_view = MangaView::assemble(id, conn).await?;
-        ret.chapters = MangaChapter::assemble_many(id, conn).await?;
-
-        Ok(ret)
+        Ok(LinkedManga {
+            manga_view: MangaView::assemble(id, conn).await?,
+            chapters: MangaChapter::assemble_many(id, conn).await?,
+        })
     }
 }
 
@@ -70,7 +65,7 @@ impl AssembleWithArgs<(&'_ str, &'_ str)> for LinkedManga {
     ) -> Result<Vec<LinkedManga>, ErrorResponder> {
         let id = ids.0;
         let linked_id = ids.1;
-        let all = MangaView::assemble_many_with_args(&id, &linked_id, conn).await?;
+        let all = MangaView::assemble_many_with_args(id, linked_id, conn).await?;
 
         let mut ret = Vec::new();
 
