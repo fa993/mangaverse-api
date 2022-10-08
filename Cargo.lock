@@ -868,7 +868,7 @@ dependencies = [
 [[package]]
 name = "mangaverse-entity"
 version = "0.4.0"
-source = "git+https://github.com/fa993/mangaverse-entity?rev=21a17ae#21a17aee235ea367a727da2d52979b67e1ed0734"
+source = "git+https://github.com/fa993/mangaverse-entity?rev=eeb068d#eeb068d64b50acb0261dc493001b73d73c7f6ac6"
 dependencies = [
  "chrono",
  "serde",
