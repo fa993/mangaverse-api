@@ -20,10 +20,6 @@ impl Assemble for PageURL {
     }
 }
 
-struct DatabaseNum {
-    pub num: i64,
-}
-
 #[async_trait]
 impl AssembleWithArgs<u32> for ChapterPosition {
     async fn assemble_with_args<'a>(
@@ -31,21 +27,23 @@ impl AssembleWithArgs<u32> for ChapterPosition {
         seq: u32,
         conn: &mut Connection<Db>,
     ) -> Result<ChapterPosition, ErrorResponder> {
-        let idx : DatabaseNum = sqlx::query_as!(
+        struct DatabaseNum {
+            pub num: i64,
+        }
+
+        let idx = sqlx::query_as!(
                 DatabaseNum,
                 "SELECT COUNT(chapter_page_id) as num FROM chapter_page WHERE exists (SELECT chapter_id FROM chapter WHERE chapter_page.chapter_id = chapter.chapter_id AND manga_id = ? AND sequence_number < ? )",
                 id, seq
             )
-            .fetch_one(&mut **conn)
-            .await?;
+            .fetch_one(&mut **conn).await?;
 
-        let len : DatabaseNum = sqlx::query_as!(
+        let len = sqlx::query_as!(
                 DatabaseNum,
                 "SELECT COUNT(chapter_page_id) as num FROM chapter_page WHERE exists (SELECT chapter_id FROM chapter WHERE chapter_page.chapter_id = chapter.chapter_id AND manga_id = ? )",
                 id
             )
-            .fetch_one(&mut **conn)
-            .await?;
+            .fetch_one(&mut **conn).await?;
 
         Ok(ChapterPosition {
             index: idx.num,
