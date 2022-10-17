@@ -1,3 +1,5 @@
+use std::collections::HashSet;
+
 use crate::{routes::ErrorResponder, Db};
 use chrono::NaiveDateTime;
 use rocket_db_pools::Connection;
@@ -160,10 +162,10 @@ struct LinkedId {
 pub async fn get_url_pairs_from_linked_ids(
     ids: &[String],
     conn: &mut Connection<Db>,
-) -> Result<Vec<(String, String)>, ErrorResponder> {
+) -> Result<HashSet<(String, String)>, ErrorResponder> {
     //this function is slow... optimize target
 
-    let mut u = Vec::new();
+    let mut u = HashSet::new();
 
     for t in ids {
         let lt = sqlx::query_as!(
