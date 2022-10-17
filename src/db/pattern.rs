@@ -13,7 +13,7 @@ impl AssembleWithOutput<HashMap<String, String>> for SourcePattern {
                 .fetch_all(&**conn)
                 .await?
                 .into_iter()
-                .map(|t: SourcePattern| (t.url, t.source_id))
+                .map(|t| (t.url, t.source_id))
                 .collect(),
         )
     }

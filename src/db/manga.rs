@@ -122,7 +122,7 @@ impl Assemble for MangaView {
             )
             .fetch_one(&mut **conn)
             .await
-            .map(|f: MangaJoinedView| f.into())?
+            .map(|f| f.into())?
         )
     }
 }

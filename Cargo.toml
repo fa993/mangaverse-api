@@ -5,14 +5,6 @@ edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
-[dependencies]
-rocket = { version = "0.5.0-rc.2", features = ["json", "uuid", "tls"]}
-serde = { version = "1.0", features = ["derive"] }
-chrono = { version = "0.4.22", features = ["serde"] }
-async-trait = "0.1.57"
-mangaverse-entity = {git = "https://github.com/fa993/mangaverse-entity", rev = "eeb068d"}
-
-
 [dependencies.sqlx]
 version = "0.5.13"
 features = ["chrono", "macros"]
@@ -20,3 +12,11 @@ features = ["chrono", "macros"]
 [dependencies.rocket_db_pools]
 version = "0.1.0-rc.2"
 features = ["sqlx_mysql"]
+
+[dependencies]
+rocket = { version = "0.5.0-rc.2", features = ["json", "uuid", "tls"]}
+serde = { version = "1.0", features = ["derive"] }
+chrono = { version = "0.4.22", features = ["serde"] }
+async-trait = "0.1.57"
+mangaverse-entity = {git = "https://github.com/fa993/mangaverse-entity", rev = "9c6c867"}
+mangaverse-sources = {git = "https://github.com/fa993/mangaverse-sources", rev = "c0d314f"}

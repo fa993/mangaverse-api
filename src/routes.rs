@@ -28,6 +28,7 @@ pub mod v1 {
         page::{ChapterPosition, PageURL},
         query::{MangaQuery, MangaQueryResponse, MangaRequest},
     };
+    use mangaverse_sources::Context;
     use rocket::serde::json::Json;
     use rocket::serde::uuid::Uuid;
     use rocket::State;
@@ -62,7 +63,7 @@ pub mod v1 {
     pub async fn get_all_genres(
         genres: &State<Arc<Vec<Genre>>>,
     ) -> Result<Json<&[Genre]>, ErrorResponder> {
-        Ok(Json(genres.inner().as_slice()))
+        Ok(Json(genres.as_slice()))
     }
 
     #[get("/chapter/<id>")]
@@ -115,7 +116,9 @@ pub mod v1 {
     }
 
     #[post("/insert", data = "<_req>")]
-    pub fn insert_manga(_req: Json<MangaRequest>) -> Result<(), ErrorResponder> {
+    pub fn insert_manga(context: &State<Arc<Context>>, _req: Json<MangaRequest>) -> Result<(), ErrorResponder> {
+        context.genres.is_empty();
+        context.sources.is_empty();
         Ok(())
     }
 }

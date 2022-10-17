@@ -1,8 +1,11 @@
 pub mod db;
 pub mod routes;
 
+use std::collections::HashMap;
+
 use db::{Assemble, AssembleWithOutput};
-use mangaverse_entity::models::{genre::Genre, pattern::SourcePattern};
+use mangaverse_entity::models::{genre::Genre, pattern::SourcePattern, source::SourceTable};
+use mangaverse_sources::Context;
 use rocket::fairing::AdHoc;
 use rocket_db_pools::{sqlx, Database};
 
@@ -25,8 +28,13 @@ fn rocket() -> _ {
             let patterns = SourcePattern::all_with_output(dbs)
                 .await
                 .expect("Error while fetching patterns");
+                let context = Context{
+                    genres: data.iter().map(|f| (f.name.clone(), f.clone())).collect::<HashMap<String, Genre>>(),
+                    sources: SourceTable::all_with_output(dbs).await.expect("Error while fetching sources")
+                };
             rocket
                 .manage(std::sync::Arc::new(data))
+                .manage(std::sync::Arc::new(context))
                 .manage(std::sync::Arc::new(patterns))
         }))
         .mount(
