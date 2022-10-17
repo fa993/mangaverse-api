@@ -1,3 +1,5 @@
+use mangaverse_sources::MSError;
+
 #[derive(Responder, Debug)]
 #[response(status = 500, content_type = "json")]
 pub struct ErrorResponder {
@@ -12,18 +14,37 @@ impl From<sqlx::Error> for ErrorResponder {
     }
 }
 
-impl From<mangaverse_sources::Error> for ErrorResponder {
-    fn from(a: mangaverse_sources::Error) -> Self {
+impl From<mangaverse_sources::MSError> for ErrorResponder {
+    fn from(a: mangaverse_sources::MSError) -> Self {
+        ErrorResponder {
+            message: match a {
+                MSError::IOError => "IO Error",
+                MSError::NetworkError => "Network Error",
+                MSError::NoError => "No Error",
+                MSError::SQLError => "SQL Error",
+                MSError::TextParseError => "Text Parse Error",
+                MSError::JoinHandleError => "Join Handle Error",
+                MSError::OtherError => "You must not see this Error",
+            }
+            .to_string(),
+        }
+    }
+}
+
+impl From<std::io::Error> for ErrorResponder {
+    fn from(a: std::io::Error) -> Self {
         ErrorResponder {
             message: a.to_string(),
         }
     }
 }
+
 pub mod v1 {
 
     use std::collections::HashMap;
     use std::sync::Arc;
 
+    use crate::db::manga::get_url_pairs_from_linked_ids;
     use crate::Db;
     use crate::{
         db::{Assemble, AssembleWithArgs, AssembleWithArgsAndOutput},
@@ -41,23 +62,26 @@ pub mod v1 {
     use mangaverse_sources::Context;
     use rocket::serde::json::Json;
     use rocket::serde::uuid::Uuid;
-    use rocket::tokio::task;
     use rocket::State;
     use rocket_db_pools::Connection;
+    use sqlx::{Executor, MySql};
+
+    use mangaverse_sources::Result as MSResult;
 
     pub async fn update_request(
         context: &Context,
         req: &MangaRequest,
-        pool: &Db,
-    ) -> Result<(), mangaverse_sources::Error> {
+        conn: impl Executor<'_, Database = MySql> + Copy,
+    ) -> MSResult<()> {
         match context.sources.get(req.id.as_str()) {
             Some(x) if x.name == "manganelo" => {
                 let mut t = get_manganelo_manga(req.url.clone(), x, &context.genres).await?;
-                update_manga(&req.url, &mut t, &pool.0, context).await?;
+                update_manga(&req.url, &mut t, conn, context).await?;
             }
             Some(x) if x.name == "readm" => {
+                // let mut t = MangaTable::new(x);
                 let mut t = get_readm_manga(req.url.clone(), x, &context.genres).await?;
-                update_manga(&req.url, &mut t, &pool.0, context).await?;
+                update_manga(&req.url, &mut t, conn, context).await?;
             }
             _ => {}
         };
@@ -74,8 +98,23 @@ pub mod v1 {
         ))
     }
 
-    #[post("/refresh", data = "<_ids>")]
-    pub fn refresh_all(_ids: Json<Vec<Uuid>>) -> Result<(), ErrorResponder> {
+    #[post("/refresh", data = "<ids>")]
+    pub async fn refresh_all(
+        ids: Json<Vec<Uuid>>,
+        db: &Db,
+        context: &State<Arc<Context>>,
+    ) -> Result<(), ErrorResponder> {
+        let all = get_url_pairs_from_linked_ids(
+            ids.iter()
+                .map(|f| f.to_string())
+                .collect::<Vec<_>>()
+                .as_slice(),
+            db,
+        )
+        .await?;
+        for (url, source_id) in all {
+            update_request(context, &MangaRequest { url, id: source_id }, &db.0).await?;
+        }
         Ok(())
     }
 
@@ -149,9 +188,11 @@ pub mod v1 {
     pub async fn insert_manga(
         context: &State<Arc<Context>>,
         req: Json<MangaRequest>,
-        pool: &Db,
+        db: &Db,
+        // mut conn: Connection<Db>,
     ) -> Result<(), ErrorResponder> {
-        update_request(context, &req, pool).await;
+        update_request(context, &req, &db.0).await?;
+
         Ok(())
     }
 }

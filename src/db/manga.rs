@@ -147,3 +147,32 @@ impl AssembleWithArgs<&'_ str> for MangaView {
         )
     }
 }
+
+pub async fn get_url_pairs_from_linked_ids(
+    ids: &[String],
+    conn: &Db,
+) -> Result<Vec<(String, String)>, ErrorResponder> {
+    //this function is slow... optimize target
+    struct URLAndSourceId {
+        url: String,
+        source_id: String,
+    }
+
+    let mut u = Vec::new();
+
+    for t in ids {
+        u.extend(
+            sqlx::query_as!(
+                URLAndSourceId,
+                "SELECT url, source_id from manga where linked_id = ?",
+                t
+            )
+            .fetch_all(&**conn)
+            .await?
+            .into_iter()
+            .map(|f| (f.url, f.source_id)),
+        );
+    }
+
+    Ok(u)
+}

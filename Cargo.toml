@@ -19,4 +19,4 @@ serde = { version = "1.0", features = ["derive"] }
 chrono = { version = "0.4.22", features = ["serde"] }
 async-trait = "0.1.57"
 mangaverse-entity = {git = "https://github.com/fa993/mangaverse-entity", rev = "9c6c867"}
-mangaverse-sources = {git = "https://github.com/fa993/mangaverse-sources", rev = "c0d314f"}
+mangaverse-sources = {git = "https://github.com/fa993/mangaverse-sources", rev = "2b3ffb4"}
