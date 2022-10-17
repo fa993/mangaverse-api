@@ -1,5 +1,3 @@
-use mangaverse_sources::MSError;
-
 #[derive(Responder, Debug)]
 #[response(status = 500, content_type = "json")]
 pub struct ErrorResponder {
@@ -17,16 +15,7 @@ impl From<sqlx::Error> for ErrorResponder {
 impl From<mangaverse_sources::MSError> for ErrorResponder {
     fn from(a: mangaverse_sources::MSError) -> Self {
         ErrorResponder {
-            message: match a {
-                MSError::IOError => "IO Error",
-                MSError::NetworkError => "Network Error",
-                MSError::NoError => "No Error",
-                MSError::SQLError => "SQL Error",
-                MSError::TextParseError => "Text Parse Error",
-                MSError::JoinHandleError => "Join Handle Error",
-                MSError::OtherError => "You must not see this Error",
-            }
-            .to_string(),
+            message: a.message
         }
     }
 }
@@ -60,6 +49,7 @@ pub mod v1 {
     use mangaverse_sources::manganelo::entity::get_manga as get_manganelo_manga;
     use mangaverse_sources::readm::entity::get_manga as get_readm_manga;
     use mangaverse_sources::Context;
+    use rocket::futures::future::join_all;
     use rocket::serde::json::Json;
     use rocket::serde::uuid::Uuid;
     use rocket::State;
@@ -102,6 +92,7 @@ pub mod v1 {
     pub async fn refresh_all(
         ids: Json<Vec<Uuid>>,
         db: &Db,
+        mut conn: Connection<Db>,
         context: &State<Arc<Context>>,
     ) -> Result<(), ErrorResponder> {
         let all = get_url_pairs_from_linked_ids(
@@ -109,11 +100,18 @@ pub mod v1 {
                 .map(|f| f.to_string())
                 .collect::<Vec<_>>()
                 .as_slice(),
-            db,
+            &mut conn
         )
         .await?;
-        for (url, source_id) in all {
-            update_request(context, &MangaRequest { url, id: source_id }, &db.0).await?;
+
+        let reqs = all.into_iter().map(|(u, s)| MangaRequest { url: u, id: s }).collect::<Vec<_>>();
+
+        let ress = join_all(reqs.iter().map(|f| update_request(context, f, &db.0))).await;
+
+        for i in ress.iter() {
+            if let Err(e) = i {
+                println!("{:#?}", e);
+            }
         }
         Ok(())
     }

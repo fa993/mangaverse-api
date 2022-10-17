@@ -18,5 +18,5 @@ rocket = { version = "0.5.0-rc.2", features = ["json", "uuid", "tls"]}
 serde = { version = "1.0", features = ["derive"] }
 chrono = { version = "0.4.22", features = ["serde"] }
 async-trait = "0.1.57"
-mangaverse-entity = {git = "https://github.com/fa993/mangaverse-entity", rev = "9c6c867"}
-mangaverse-sources = {git = "https://github.com/fa993/mangaverse-sources", rev = "2b3ffb4"}
+mangaverse-entity = {git = "https://github.com/fa993/mangaverse-entity", rev = "8597392"}
+mangaverse-sources = {git = "https://github.com/fa993/mangaverse-sources", rev = "df39ef9"}
