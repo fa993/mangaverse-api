@@ -28,10 +28,15 @@ fn rocket() -> _ {
             let patterns = SourcePattern::all_with_output(dbs)
                 .await
                 .expect("Error while fetching patterns");
-                let context = Context{
-                    genres: data.iter().map(|f| (f.name.clone(), f.clone())).collect::<HashMap<String, Genre>>(),
-                    sources: SourceTable::all_with_output(dbs).await.expect("Error while fetching sources")
-                };
+            let context = Context {
+                genres: data
+                    .iter()
+                    .map(|f| (f.name.clone(), f.clone()))
+                    .collect::<HashMap<String, Genre>>(),
+                sources: SourceTable::all_with_output(dbs)
+                    .await
+                    .expect("Error while fetching sources"),
+            };
             rocket
                 .manage(std::sync::Arc::new(data))
                 .manage(std::sync::Arc::new(context))

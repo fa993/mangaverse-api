@@ -12,6 +12,13 @@ impl From<sqlx::Error> for ErrorResponder {
     }
 }
 
+impl From<mangaverse_sources::Error> for ErrorResponder {
+    fn from(a: mangaverse_sources::Error) -> Self {
+        ErrorResponder {
+            message: a.to_string(),
+        }
+    }
+}
 pub mod v1 {
 
     use std::collections::HashMap;
@@ -28,11 +35,34 @@ pub mod v1 {
         page::{ChapterPosition, PageURL},
         query::{MangaQuery, MangaQueryResponse, MangaRequest},
     };
+    use mangaverse_sources::db::manga::update_manga;
+    use mangaverse_sources::manganelo::entity::get_manga as get_manganelo_manga;
+    use mangaverse_sources::readm::entity::get_manga as get_readm_manga;
     use mangaverse_sources::Context;
     use rocket::serde::json::Json;
     use rocket::serde::uuid::Uuid;
+    use rocket::tokio::task;
     use rocket::State;
     use rocket_db_pools::Connection;
+
+    pub async fn update_request(
+        context: &Context,
+        req: &MangaRequest,
+        pool: &Db,
+    ) -> Result<(), mangaverse_sources::Error> {
+        match context.sources.get(req.id.as_str()) {
+            Some(x) if x.name == "manganelo" => {
+                let mut t = get_manganelo_manga(req.url.clone(), x, &context.genres).await?;
+                update_manga(&req.url, &mut t, &pool.0, context).await?;
+            }
+            Some(x) if x.name == "readm" => {
+                let mut t = get_readm_manga(req.url.clone(), x, &context.genres).await?;
+                update_manga(&req.url, &mut t, &pool.0, context).await?;
+            }
+            _ => {}
+        };
+        Ok(())
+    }
 
     #[get("/<id>")]
     pub async fn get_manga(
@@ -115,10 +145,13 @@ pub mod v1 {
         Ok(Json(patterns))
     }
 
-    #[post("/insert", data = "<_req>")]
-    pub fn insert_manga(context: &State<Arc<Context>>, _req: Json<MangaRequest>) -> Result<(), ErrorResponder> {
-        context.genres.is_empty();
-        context.sources.is_empty();
+    #[post("/insert", data = "<req>")]
+    pub async fn insert_manga(
+        context: &State<Arc<Context>>,
+        req: Json<MangaRequest>,
+        pool: &Db,
+    ) -> Result<(), ErrorResponder> {
+        update_request(context, &req, pool).await;
         Ok(())
     }
 }

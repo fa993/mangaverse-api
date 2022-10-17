@@ -27,13 +27,14 @@ impl Assemble for MangaSource {
 #[async_trait]
 impl AssembleWithOutput<HashMap<String, SourceTable>> for SourceTable {
     async fn all_with_output(conn: &Db) -> Result<HashMap<String, SourceTable>, ErrorResponder> {
-        Ok(
-            sqlx::query_as!(SourceTable, "SELECT source_id as id, name, priority from source")
-                .fetch_all(&**conn)
-                .await?
-                .into_iter()
-                .map(|t| (t.id.clone(), t))
-                .collect(),
+        Ok(sqlx::query_as!(
+            SourceTable,
+            "SELECT source_id as id, name, priority from source"
         )
+        .fetch_all(&**conn)
+        .await?
+        .into_iter()
+        .map(|t| (t.id.clone(), t))
+        .collect())
     }
 }
