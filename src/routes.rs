@@ -14,9 +14,7 @@ impl From<sqlx::Error> for ErrorResponder {
 
 impl From<mangaverse_sources::MSError> for ErrorResponder {
     fn from(a: mangaverse_sources::MSError) -> Self {
-        ErrorResponder {
-            message: a.message
-        }
+        ErrorResponder { message: a.message }
     }
 }
 
@@ -100,11 +98,14 @@ pub mod v1 {
                 .map(|f| f.to_string())
                 .collect::<Vec<_>>()
                 .as_slice(),
-            &mut conn
+            &mut conn,
         )
         .await?;
 
-        let reqs = all.into_iter().map(|(u, s)| MangaRequest { url: u, id: s }).collect::<Vec<_>>();
+        let reqs = all
+            .into_iter()
+            .map(|(u, s)| MangaRequest { url: u, id: s })
+            .collect::<Vec<_>>();
 
         let ress = join_all(reqs.iter().map(|f| update_request(context, f, &db.0))).await;
 

@@ -153,6 +153,10 @@ struct URLAndSourceId {
     source_id: String,
 }
 
+struct LinkedId {
+    linked_id: String,
+}
+
 pub async fn get_url_pairs_from_linked_ids(
     ids: &[String],
     conn: &mut Connection<Db>,
@@ -162,11 +166,20 @@ pub async fn get_url_pairs_from_linked_ids(
     let mut u = Vec::new();
 
     for t in ids {
+        let lt = sqlx::query_as!(
+            LinkedId,
+            "SELECT linked_id from manga where manga_id = ?",
+            t
+        )
+        .fetch_one(&mut **conn)
+        .await?
+        .linked_id;
+
         u.extend(
             sqlx::query_as!(
                 URLAndSourceId,
                 "SELECT url, source_id from manga where linked_id = ?",
-                t
+                lt
             )
             .fetch_all(&mut **conn)
             .await?
