@@ -97,13 +97,13 @@ pub mod v1 {
 
     pub async fn update_request_from_id(
         context: &Context,
-        url: &str,
+        id: &str,
         conn: impl Executor<'_, Database = MySql> + Copy,
     ) -> MSResult<()> {
 
-        println!("Processing {}", url);
+        println!("Processing {}", id);
 
-        let stored = get_db_manga_id(url, conn, context).await?;
+        let stored = get_db_manga_id(id, conn, context).await?;
         
         if let Some(u) = stored.last_watch_time {
             if Utc::now().timestamp_millis() - u <= 1 * 60 * 1000 {
@@ -114,10 +114,10 @@ pub mod v1 {
 
         let mut t = match stored.source {
             x if x.name == "manganelo" => {
-                get_manganelo_manga(url.to_owned(), x, &context.genres).await?
+                get_manganelo_manga(stored.url.to_owned(), x, &context.genres).await?
             }
             x if x.name == "readm" => {
-                get_readm_manga(url.to_owned(), x, &context.genres).await?
+                get_readm_manga(stored.url.to_owned(), x, &context.genres).await?
             }
             _ => {
                 return Ok(())
@@ -126,7 +126,7 @@ pub mod v1 {
 
         update_manga(&stored, &mut t, conn).await?;
 
-        println!("Finished Processing {}", url);
+        println!("Finished Processing {}", id);
 
         Ok(())
     }
