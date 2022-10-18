@@ -264,14 +264,14 @@ pub mod v1 {
     pub async fn insert_manga(
         context: &State<Arc<Context>>,
         req: Json<MangaRequest>,
-        db: &Db,
+        _db: &Db,
         // mut conn: Connection<Db>,
     ) -> Result<(), ErrorResponder> {
         // update_request_from_url(context, &req.url, &db.0).await?;
 
         // WIP
 
-        let mut t = match context.sources.get(req.0.id.as_str()) {
+        let mut _t = match context.sources.get(req.0.id.as_str()) {
             Some(x) if x.name == "manganelo" => {
                 get_manganelo_manga(req.url.to_string(), x, &context.genres).await?
             }
