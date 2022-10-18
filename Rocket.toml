@@ -2,6 +2,7 @@
 # Mysql
 # make sure to enable "sqlx-mysql" feature in Cargo.toml, i.e default = ["sqlx-mysql"]
 url = "mysql://admin:admin123@localhost/manga_server"
+timeout = 100
 
 [default.tls]
 certs = "orange.crt"

@@ -44,11 +44,11 @@ pub mod v1 {
         page::{ChapterPosition, PageURL},
         query::{MangaQuery, MangaQueryResponse, MangaRequest},
     };
+    use mangaverse_sources::db::manga::get_manga_from_id as get_db_manga_id;
+    use mangaverse_sources::db::manga::get_manga_from_url as get_db_manga_url;
     use mangaverse_sources::db::manga::update_manga;
     use mangaverse_sources::manganelo::entity::get_manga as get_manganelo_manga;
     use mangaverse_sources::readm::entity::get_manga as get_readm_manga;
-    use mangaverse_sources::db::manga::get_manga_from_url as get_db_manga_url;
-    use mangaverse_sources::db::manga::get_manga_from_id as get_db_manga_id;
     use mangaverse_sources::Context;
     use rocket::futures::future::join_all;
     use rocket::serde::json::Json;
@@ -64,11 +64,10 @@ pub mod v1 {
         url: &str,
         conn: impl Executor<'_, Database = MySql> + Copy,
     ) -> MSResult<()> {
-
         println!("Processing {}", url);
 
         let stored = get_db_manga_url(url, conn, context).await?;
-        
+
         if let Some(u) = stored.last_watch_time {
             if Utc::now().timestamp_millis() - u <= 15 * 60 * 1000 {
                 println!("Not Watching because of time limit");
@@ -80,12 +79,8 @@ pub mod v1 {
             x if x.name == "manganelo" => {
                 get_manganelo_manga(url.to_owned(), x, &context.genres).await?
             }
-            x if x.name == "readm" => {
-                get_readm_manga(url.to_owned(), x, &context.genres).await?
-            }
-            _ => {
-                return Ok(())
-            }
+            x if x.name == "readm" => get_readm_manga(url.to_owned(), x, &context.genres).await?,
+            _ => return Ok(()),
         };
 
         update_manga(&stored, &mut t, conn).await?;
@@ -95,16 +90,16 @@ pub mod v1 {
         Ok(())
     }
 
+    #[allow(clippy::identity_op)]
     pub async fn update_request_from_id(
         context: &Context,
         id: &str,
         conn: impl Executor<'_, Database = MySql> + Copy,
     ) -> MSResult<()> {
-
         println!("Processing {}", id);
 
         let stored = get_db_manga_id(id, conn, context).await?;
-        
+
         if let Some(u) = stored.last_watch_time {
             if Utc::now().timestamp_millis() - u <= 1 * 60 * 1000 {
                 println!("Not Watching because of time limit");
@@ -119,9 +114,7 @@ pub mod v1 {
             x if x.name == "readm" => {
                 get_readm_manga(stored.url.to_owned(), x, &context.genres).await?
             }
-            _ => {
-                return Ok(())
-            }
+            _ => return Ok(()),
         };
 
         update_manga(&stored, &mut t, conn).await?;
@@ -148,7 +141,6 @@ pub mod v1 {
         mut conn: Connection<Db>,
         context: &State<Arc<Context>>,
     ) -> Result<(), ErrorResponder> {
-
         println!("Processing Refresh Request");
 
         let all = get_urls_from_linked_ids(
@@ -160,7 +152,11 @@ pub mod v1 {
         )
         .await?;
 
-        let ress = join_all(all.iter().map(|f| update_request_from_url(context, f, &db.0))).await;
+        let ress = join_all(
+            all.iter()
+                .map(|f| update_request_from_url(context, f, &db.0)),
+        )
+        .await;
 
         for i in ress.iter() {
             if let Err(e) = i {
@@ -179,10 +175,13 @@ pub mod v1 {
         db: &Db,
         context: &State<Arc<Context>>,
     ) -> Result<(), ErrorResponder> {
-
         println!("Processing Refresh Request");
 
-        let ress = join_all(ids.iter().map(|f| update_request_from_id(context, f, &db.0))).await;
+        let ress = join_all(
+            ids.iter()
+                .map(|f| update_request_from_id(context, f, &db.0)),
+        )
+        .await;
 
         for i in ress.iter() {
             if let Err(e) = i {
@@ -194,8 +193,6 @@ pub mod v1 {
 
         Ok(())
     }
-
-
 
     #[get("/part/<id>")]
     pub async fn get_linked_manga(
@@ -270,7 +267,19 @@ pub mod v1 {
         db: &Db,
         // mut conn: Connection<Db>,
     ) -> Result<(), ErrorResponder> {
-        update_request_from_url(context, &req.url, &db.0).await?;
+        // update_request_from_url(context, &req.url, &db.0).await?;
+
+        // WIP
+
+        let mut t = match context.sources.get(req.0.id.as_str()) {
+            Some(x) if x.name == "manganelo" => {
+                get_manganelo_manga(req.url.to_string(), x, &context.genres).await?
+            }
+            Some(x) if x.name == "readm" => {
+                get_readm_manga(req.url.to_string(), x, &context.genres).await?
+            }
+            _ => return Ok(()),
+        };
 
         Ok(())
     }
