@@ -93,6 +93,9 @@ pub mod v1 {
         mut conn: Connection<Db>,
         context: &State<Arc<Context>>,
     ) -> Result<(), ErrorResponder> {
+
+        println!("Processing Refresh Request");
+
         let all = get_url_pairs_from_linked_ids(
             ids.iter()
                 .map(|f| f.to_string())
@@ -114,6 +117,9 @@ pub mod v1 {
                 println!("{:#?}", e);
             }
         }
+
+        println!("Processed Refresh Request");
+
         Ok(())
     }
 

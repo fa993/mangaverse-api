@@ -1118,7 +1118,7 @@ dependencies = [
 [[package]]
 name = "mangaverse-sources"
 version = "0.2.0"
-source = "git+https://github.com/fa993/mangaverse-sources?rev=04c6d61#04c6d61c15dda7856d161c6618565643732a89f6"
+source = "git+https://github.com/fa993/mangaverse-sources?rev=e44f25f#e44f25fff04e8612e4d6c5e2d62690d8ab440d24"
 dependencies = [
  "itertools",
  "lazy_static",
