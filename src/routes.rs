@@ -104,6 +104,13 @@ pub mod v1 {
         println!("Processing {}", url);
 
         let stored = get_db_manga_id(url, conn, context).await?;
+        
+        if let Some(u) = stored.last_watch_time {
+            if Utc::now().timestamp_millis() - u <= 1 * 60 * 1000 {
+                println!("Not Watching because of time limit");
+                return Ok(());
+            }
+        }
 
         let mut t = match stored.source {
             x if x.name == "manganelo" => {
