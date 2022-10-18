@@ -1,6 +1,6 @@
 [package]
 name = "mangaverse-api"
-version = "0.5.0"
+version = "0.6.0"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -19,4 +19,4 @@ serde = { version = "1.0", features = ["derive"] }
 chrono = { version = "0.4.22", features = ["serde"] }
 async-trait = "0.1.57"
 mangaverse-entity = {git = "https://github.com/fa993/mangaverse-entity", rev = "8597392"}
-mangaverse-sources = {git = "https://github.com/fa993/mangaverse-sources", rev = "e44f25f"}
+mangaverse-sources = {git = "https://github.com/fa993/mangaverse-sources", rev = "b51e0d4"}

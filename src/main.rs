@@ -47,6 +47,7 @@ fn rocket() -> _ {
             routes![
                 v1::get_manga,
                 v1::refresh_all,
+                v1::refresh_one,
                 v1::get_linked_manga,
                 v1::get_all_genres,
                 v1::get_chapter,

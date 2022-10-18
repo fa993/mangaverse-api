@@ -31,12 +31,13 @@ pub mod v1 {
     use std::collections::HashMap;
     use std::sync::Arc;
 
-    use crate::db::manga::get_url_pairs_from_linked_ids;
+    use crate::db::manga::get_urls_from_linked_ids;
     use crate::Db;
     use crate::{
         db::{Assemble, AssembleWithArgs, AssembleWithArgsAndOutput},
         routes::ErrorResponder,
     };
+    use chrono::Utc;
     use mangaverse_entity::models::{
         genre::Genre,
         manga::{CompleteManga, LinkedManga},
@@ -46,6 +47,8 @@ pub mod v1 {
     use mangaverse_sources::db::manga::update_manga;
     use mangaverse_sources::manganelo::entity::get_manga as get_manganelo_manga;
     use mangaverse_sources::readm::entity::get_manga as get_readm_manga;
+    use mangaverse_sources::db::manga::get_manga_from_url as get_db_manga_url;
+    use mangaverse_sources::db::manga::get_manga_from_id as get_db_manga_id;
     use mangaverse_sources::Context;
     use rocket::futures::future::join_all;
     use rocket::serde::json::Json;
@@ -56,23 +59,68 @@ pub mod v1 {
 
     use mangaverse_sources::Result as MSResult;
 
-    pub async fn update_request(
+    pub async fn update_request_from_url(
         context: &Context,
-        req: &MangaRequest,
+        url: &str,
         conn: impl Executor<'_, Database = MySql> + Copy,
     ) -> MSResult<()> {
-        match context.sources.get(req.id.as_str()) {
-            Some(x) if x.name == "manganelo" => {
-                let mut t = get_manganelo_manga(req.url.clone(), x, &context.genres).await?;
-                update_manga(&req.url, &mut t, conn, context).await?;
+
+        println!("Processing {}", url);
+
+        let stored = get_db_manga_url(url, conn, context).await?;
+        
+        if let Some(u) = stored.last_watch_time {
+            if Utc::now().timestamp_millis() - u <= 15 * 60 * 1000 {
+                println!("Not Watching because of time limit");
+                return Ok(());
             }
-            Some(x) if x.name == "readm" => {
-                // let mut t = MangaTable::new(x);
-                let mut t = get_readm_manga(req.url.clone(), x, &context.genres).await?;
-                update_manga(&req.url, &mut t, conn, context).await?;
+        }
+
+        let mut t = match stored.source {
+            x if x.name == "manganelo" => {
+                get_manganelo_manga(url.to_owned(), x, &context.genres).await?
             }
-            _ => {}
+            x if x.name == "readm" => {
+                get_readm_manga(url.to_owned(), x, &context.genres).await?
+            }
+            _ => {
+                return Ok(())
+            }
         };
+
+        update_manga(&stored, &mut t, conn).await?;
+
+        println!("Finished Processing {}", url);
+
+        Ok(())
+    }
+
+    pub async fn update_request_from_id(
+        context: &Context,
+        url: &str,
+        conn: impl Executor<'_, Database = MySql> + Copy,
+    ) -> MSResult<()> {
+
+        println!("Processing {}", url);
+
+        let stored = get_db_manga_id(url, conn, context).await?;
+
+        let mut t = match stored.source {
+            x if x.name == "manganelo" => {
+                get_manganelo_manga(url.to_owned(), x, &context.genres).await?
+            }
+            x if x.name == "readm" => {
+                get_readm_manga(url.to_owned(), x, &context.genres).await?
+            }
+            _ => {
+                return Ok(())
+            }
+        };
+
+        update_manga(&stored, &mut t, conn).await?;
+
+        println!("Finished Processing {}", url);
+
         Ok(())
     }
 
@@ -96,7 +144,7 @@ pub mod v1 {
 
         println!("Processing Refresh Request");
 
-        let all = get_url_pairs_from_linked_ids(
+        let all = get_urls_from_linked_ids(
             ids.iter()
                 .map(|f| f.to_string())
                 .collect::<Vec<_>>()
@@ -105,12 +153,7 @@ pub mod v1 {
         )
         .await?;
 
-        let reqs = all
-            .into_iter()
-            .map(|(u, s)| MangaRequest { url: u, id: s })
-            .collect::<Vec<_>>();
-
-        let ress = join_all(reqs.iter().map(|f| update_request(context, f, &db.0))).await;
+        let ress = join_all(all.iter().map(|f| update_request_from_url(context, f, &db.0))).await;
 
         for i in ress.iter() {
             if let Err(e) = i {
@@ -122,6 +165,30 @@ pub mod v1 {
 
         Ok(())
     }
+
+    #[post("/refreshOne", data = "<ids>")]
+    pub async fn refresh_one(
+        ids: Json<Vec<String>>,
+        db: &Db,
+        context: &State<Arc<Context>>,
+    ) -> Result<(), ErrorResponder> {
+
+        println!("Processing Refresh Request");
+
+        let ress = join_all(ids.iter().map(|f| update_request_from_id(context, f, &db.0))).await;
+
+        for i in ress.iter() {
+            if let Err(e) = i {
+                println!("{:#?}", e);
+            }
+        }
+
+        println!("Processed Refresh Request");
+
+        Ok(())
+    }
+
+
 
     #[get("/part/<id>")]
     pub async fn get_linked_manga(
@@ -196,7 +263,7 @@ pub mod v1 {
         db: &Db,
         // mut conn: Connection<Db>,
     ) -> Result<(), ErrorResponder> {
-        update_request(context, &req, &db.0).await?;
+        update_request_from_url(context, &req.url, &db.0).await?;
 
         Ok(())
     }

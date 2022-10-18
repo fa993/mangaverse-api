@@ -150,19 +150,18 @@ impl AssembleWithArgs<&'_ str> for MangaView {
     }
 }
 
-struct URLAndSourceId {
+struct Url {
     url: String,
-    source_id: String,
 }
 
 struct LinkedId {
     linked_id: String,
 }
 
-pub async fn get_url_pairs_from_linked_ids(
+pub async fn get_urls_from_linked_ids(
     ids: &[String],
     conn: &mut Connection<Db>,
-) -> Result<HashSet<(String, String)>, ErrorResponder> {
+) -> Result<HashSet<String>, ErrorResponder> {
     //this function is slow... optimize target
 
     let mut u = HashSet::new();
@@ -179,14 +178,14 @@ pub async fn get_url_pairs_from_linked_ids(
 
         u.extend(
             sqlx::query_as!(
-                URLAndSourceId,
-                "SELECT url, source_id from manga where linked_id = ?",
+                Url,
+                "SELECT url from manga where linked_id = ?",
                 lt
             )
             .fetch_all(&mut **conn)
             .await?
             .into_iter()
-            .map(|f| (f.url, f.source_id)),
+            .map(|f| f.url),
         );
     }
 
