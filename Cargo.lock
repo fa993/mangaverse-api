@@ -1137,7 +1137,7 @@ dependencies = [
 [[package]]
 name = "mangaverse-sources"
 version = "0.4.0"
-source = "git+https://github.com/fa993/mangaverse-sources?rev=d1d0f60#d1d0f60cb196d6ef9abe2944de5effd82b66dbc9"
+source = "git+https://github.com/fa993/mangaverse-sources?rev=67fb8f6#67fb8f6718227dcbd207902880d942d86aadf8a7"
 dependencies = [
  "Inflector",
  "itertools",
