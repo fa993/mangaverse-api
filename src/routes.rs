@@ -171,7 +171,7 @@ pub mod v1 {
         println!("Processing Refresh Request");
 
         for t in ids.iter() {
-            if let Err(e) = update_request_from_url(context, t.as_str(), &mut *conn).await {
+            if let Err(e) = update_request_from_id(context, t.as_str(), &mut *conn).await {
                 println!("{:#?}", e);
             }
         }
