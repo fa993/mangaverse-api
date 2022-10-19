@@ -31,8 +31,8 @@ pub mod v1 {
     use std::collections::HashMap;
     use std::sync::Arc;
 
-    use crate::db::manga::get_urls_from_linked_ids;
-    use crate::Db;
+    use crate::db::manga::{get_urls_from_linked_ids, check_if_manga_exists};
+    use crate::{Db, AllPatterns};
     use crate::{
         db::{Assemble, AssembleWithArgs, AssembleWithArgsAndOutput},
         routes::ErrorResponder,
@@ -44,25 +44,25 @@ pub mod v1 {
         page::{ChapterPosition, PageURL},
         query::{MangaQuery, MangaQueryResponse, MangaRequest},
     };
-    use mangaverse_sources::db::manga::get_manga_from_id as get_db_manga_id;
+    use mangaverse_sources::db::manga::{get_manga_from_id as get_db_manga_id, insert_manga as insert_manga_db};
     use mangaverse_sources::db::manga::get_manga_from_url as get_db_manga_url;
     use mangaverse_sources::db::manga::update_manga;
     use mangaverse_sources::manganelo::entity::get_manga as get_manganelo_manga;
     use mangaverse_sources::readm::entity::get_manga as get_readm_manga;
     use mangaverse_sources::Context;
-    use rocket::futures::future::join_all;
     use rocket::serde::json::Json;
     use rocket::serde::uuid::Uuid;
     use rocket::State;
     use rocket_db_pools::Connection;
-    use sqlx::{Executor, MySql};
+    use sqlx::pool::PoolConnection;
+    use sqlx::MySql;
 
     use mangaverse_sources::Result as MSResult;
 
     pub async fn update_request_from_url(
         context: &Context,
         url: &str,
-        conn: impl Executor<'_, Database = MySql> + Copy,
+        conn: &mut PoolConnection<MySql>
     ) -> MSResult<()> {
         println!("Processing {}", url);
 
@@ -94,7 +94,7 @@ pub mod v1 {
     pub async fn update_request_from_id(
         context: &Context,
         id: &str,
-        conn: impl Executor<'_, Database = MySql> + Copy,
+        conn: &mut PoolConnection<MySql>
     ) -> MSResult<()> {
         println!("Processing {}", id);
 
@@ -137,7 +137,6 @@ pub mod v1 {
     #[post("/refresh", data = "<ids>")]
     pub async fn refresh_all(
         ids: Json<Vec<Uuid>>,
-        db: &Db,
         mut conn: Connection<Db>,
         context: &State<Arc<Context>>,
     ) -> Result<(), ErrorResponder> {
@@ -152,14 +151,8 @@ pub mod v1 {
         )
         .await?;
 
-        let ress = join_all(
-            all.iter()
-                .map(|f| update_request_from_url(context, f, &db.0)),
-        )
-        .await;
-
-        for i in ress.iter() {
-            if let Err(e) = i {
+        for t in all {
+            if let Err(e) = update_request_from_url(context, t.as_str(), &mut *conn).await {
                 println!("{:#?}", e);
             }
         }
@@ -172,19 +165,13 @@ pub mod v1 {
     #[post("/refreshOne", data = "<ids>")]
     pub async fn refresh_one(
         ids: Json<Vec<String>>,
-        db: &Db,
+        mut conn: Connection<Db>,
         context: &State<Arc<Context>>,
     ) -> Result<(), ErrorResponder> {
         println!("Processing Refresh Request");
 
-        let ress = join_all(
-            ids.iter()
-                .map(|f| update_request_from_id(context, f, &db.0)),
-        )
-        .await;
-
-        for i in ress.iter() {
-            if let Err(e) = i {
+        for t in ids.iter() {
+            if let Err(e) = update_request_from_url(context, t.as_str(), &mut *conn).await {
                 println!("{:#?}", e);
             }
         }
@@ -255,23 +242,20 @@ pub mod v1 {
 
     #[get("/currentSources")]
     pub async fn get_source_patterns(
-        patterns: &State<Arc<HashMap<String, String>>>,
+        patterns: &State<Arc<AllPatterns>>,
     ) -> Result<Json<&HashMap<String, String>>, ErrorResponder> {
-        Ok(Json(patterns))
+        Ok(Json(&patterns.patterns))
     }
 
     #[post("/insert", data = "<req>")]
     pub async fn insert_manga(
         context: &State<Arc<Context>>,
         req: Json<MangaRequest>,
-        _db: &Db,
-        // mut conn: Connection<Db>,
+        mut conn: Connection<Db>
     ) -> Result<(), ErrorResponder> {
-        // update_request_from_url(context, &req.url, &db.0).await?;
-
         // WIP
 
-        let mut _t = match context.sources.get(req.0.id.as_str()) {
+        let mut t = match context.sources.get(req.0.id.as_str()) {
             Some(x) if x.name == "manganelo" => {
                 get_manganelo_manga(req.url.to_string(), x, &context.genres).await?
             }
@@ -281,6 +265,27 @@ pub mod v1 {
             _ => return Ok(()),
         };
 
+        if check_if_manga_exists(req.url.as_str(), &mut conn).await? {
+            update_request_from_url(context, req.url.as_str(), &mut *conn).await?;
+        } else {
+            insert_manga_db(&mut t, &mut *conn).await?;
+        }
+
         Ok(())
     }
+}
+
+pub mod v2 {
+    use std::{sync::Arc, collections::HashMap};
+    use rocket::{State, serde::json::Json};
+    use crate::routes::ErrorResponder;
+
+
+    #[get("/allSources")]
+    pub async fn get_sources(
+        sources: &State<Arc<HashMap<String, String>>>,
+    ) -> Result<Json<&HashMap<String, String>>, ErrorResponder> {
+        Ok(Json(sources))
+    }
+
 }

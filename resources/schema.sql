@@ -40,7 +40,8 @@ DROP TABLE IF EXISTS `author`;
 CREATE TABLE `author` (
   `author_id` varchar(255) NOT NULL,
   `name` varchar(255) NOT NULL,
-  PRIMARY KEY (`author_id`)
+  PRIMARY KEY (`author_id`),
+  UNIQUE KEY `author_name_unique_index` (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -56,7 +57,7 @@ CREATE TABLE `chapter` (
   `chapter_name` varchar(255) NOT NULL,
   `chapter_number` varchar(255) NOT NULL,
   `updated_at` datetime DEFAULT NULL,
-  `manga_id` varchar(255) DEFAULT NULL,
+  `manga_id` varchar(255) NOT NULL,
   `last_watch_time` bigint(20) NOT NULL,
   `sequence_number` int(11) NOT NULL,
   PRIMARY KEY (`chapter_id`),
@@ -80,7 +81,7 @@ CREATE TABLE `chapter_page` (
   PRIMARY KEY (`chapter_page_id`),
   KEY `chapter_chapter_page_fk` (`chapter_id`),
   CONSTRAINT `chapter_chapter_page_fk` FOREIGN KEY (`chapter_id`) REFERENCES `chapter` (`chapter_id`) ON DELETE NO ACTION ON UPDATE NO ACTION
-) ENGINE=InnoDB AUTO_INCREMENT=41523920 DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB AUTO_INCREMENT=41574218 DEFAULT CHARSET=utf8mb4;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -287,4 +288,4 @@ CREATE TABLE `title` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2022-09-27 14:03:36
+-- Dump completed on 2022-10-19 17:09:29

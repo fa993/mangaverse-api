@@ -175,3 +175,11 @@ pub async fn get_urls_from_linked_ids(
 
     Ok(u)
 }
+
+pub async fn check_if_manga_exists(url: &str, conn: &mut Connection<Db>) -> Result<bool, sqlx::Error> {
+    let y = sqlx::query!("SELECT EXISTS(SELECT manga_id from manga where url = ?) as ex", url)
+        .fetch_one(&mut **conn)
+        .await?
+        .ex;
+    Ok(y!=0)
+}
