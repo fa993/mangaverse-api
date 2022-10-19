@@ -255,20 +255,35 @@ pub mod v1 {
     ) -> Result<(), ErrorResponder> {
         // WIP
 
-        let mut t = match context.sources.get(req.0.id.as_str()) {
+        let t = match context.sources.get(req.0.id.as_str()) {
             Some(x) if x.name == "manganelo" => {
-                get_manganelo_manga(req.url.to_string(), x, &context.genres).await?
+                get_manganelo_manga(req.url.to_string(), x, &context.genres).await
             }
             Some(x) if x.name == "readm" => {
-                get_readm_manga(req.url.to_string(), x, &context.genres).await?
+                get_readm_manga(req.url.to_string(), x, &context.genres).await
             }
             _ => return Ok(()),
         };
+        
+        if let Err(t) = t {
+            println!("{}", ErrorResponder::from(t).message);
+            return Ok(());
+        }
 
-        if check_if_manga_exists(req.url.as_str(), &mut conn).await? {
-            update_request_from_url(context, req.url.as_str(), &mut *conn).await?;
-        } else {
-            insert_manga_db(&mut t, &mut *conn).await?;
+        let mut t = t.unwrap();
+
+        let y = match check_if_manga_exists(req.url.as_str(), &mut conn).await {
+            Ok(true) => update_request_from_url(context, req.url.as_str(), &mut *conn).await,
+            Ok(false) => insert_manga_db(&mut t, &mut *conn).await,
+            Err(t) => {
+                println!("{}", ErrorResponder::from(t).message);
+                Ok(())
+            },
+        };
+
+        if let Err(yy) = y {
+            println!("{}", ErrorResponder::from(yy).message);
+            return Ok(());
         }
 
         Ok(())
