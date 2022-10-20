@@ -184,12 +184,13 @@ pub async fn check_if_manga_exists(url: &str, conn: &mut Connection<Db>) -> Resu
     Ok(y!=0)
 }
 
+//done using temporary table and corrected server side
+
 // struct IdAndGenres {
 //     manga_id: String,
 //     genres: Option<String>
 // }
 
-//done using temporary table and corrected server side
 // pub async fn _corrections(conn: &Db) {
 //     sqlx::query!("UPDATE manga_listing INNER JOIN manga ON manga.manga_id = manga_listing.manga_id SET manga_listing.cover_url = manga.cover_url, manga_listing.name = manga.name, manga_listing.description_small = SUBSTR(manga.description, 1, 255)").execute(& **conn).await;
 //     let mut i: i32 = 0;
