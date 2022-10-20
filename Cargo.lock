@@ -1128,7 +1128,7 @@ dependencies = [
 [[package]]
 name = "mangaverse-entity"
 version = "0.4.0"
-source = "git+https://github.com/fa993/mangaverse-entity?rev=8597392#85973925091e329fdd810ccf28fe546d04d7bac0"
+source = "git+https://github.com/fa993/mangaverse-entity?rev=817487c#817487c806733c9977b3753b43de6a660a032d7e"
 dependencies = [
  "chrono",
  "serde",
@@ -1137,7 +1137,7 @@ dependencies = [
 [[package]]
 name = "mangaverse-sources"
 version = "0.4.0"
-source = "git+https://github.com/fa993/mangaverse-sources?rev=7827903#7827903aba4a0a1a0be5663feb57b8f2c2bb3765"
+source = "git+https://github.com/fa993/mangaverse-sources?rev=f317416#f31741646504f270b50615002b8260e5fd3d9928"
 dependencies = [
  "Inflector",
  "itertools",
