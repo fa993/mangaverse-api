@@ -183,3 +183,29 @@ pub async fn check_if_manga_exists(url: &str, conn: &mut Connection<Db>) -> Resu
         .ex;
     Ok(y!=0)
 }
+
+// struct IdAndGenres {
+//     manga_id: String,
+//     genres: Option<String>
+// }
+
+//done using temporary table and corrected server side
+// pub async fn _corrections(conn: &Db) {
+//     sqlx::query!("UPDATE manga_listing INNER JOIN manga ON manga.manga_id = manga_listing.manga_id SET manga_listing.cover_url = manga.cover_url, manga_listing.name = manga.name, manga_listing.description_small = SUBSTR(manga.description, 1, 255)").execute(& **conn).await;
+//     let mut i: i32 = 0;
+//     loop {
+//         let v = sqlx::query_as!(IdAndGenres, "SELECT manga.manga_id as manga_id, group_concat(CONCAT(UPPER(SUBSTRING(genre.name,1,1)),LOWER(SUBSTRING(genre.name,2))) SEPARATOR ', ') as genres from manga, manga_genre, genre, manga_listing where manga_listing.manga_id = manga.manga_id and manga_genre.manga_id = manga.manga_id and genre.genre_id = manga_genre.genre_id group by manga.manga_id limit ?, ?", i, 10 as i32).fetch_all(& **conn).await.expect("Couldn't execute query");
+
+//         if v.len() == 0 {
+//             println!("Breaking at i {}", i);
+//             break;
+//         }
+
+//         for t2 in v {
+//             sqlx::query!("UPDATE manga_listing SET genres = ? where manga_id = ?", t2.genres.unwrap_or("".to_string()), t2.manga_id).execute(& **conn).await.expect("Couldnt reinsert genre");
+//         }
+//         i += 10;
+
+//     }
+
+// }
