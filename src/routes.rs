@@ -49,6 +49,7 @@ pub mod v1 {
     use mangaverse_sources::db::manga::update_manga;
     use mangaverse_sources::manganelo::entity::get_manga as get_manganelo_manga;
     use mangaverse_sources::readm::entity::get_manga as get_readm_manga;
+    // use mangaverse_sources::studygroup::entity::get_manga as get_study_group_manga;
     use mangaverse_sources::Context;
     use rocket::serde::json::Json;
     use rocket::serde::uuid::Uuid;
@@ -76,10 +77,9 @@ pub mod v1 {
         }
 
         let mut t = match stored.source {
-            x if x.name == "manganelo" => {
-                get_manganelo_manga(url.to_owned(), x, &context.genres).await?
-            }
+            x if x.name == "manganelo" => get_manganelo_manga(url.to_owned(), x, &context.genres).await?,
             x if x.name == "readm" => get_readm_manga(url.to_owned(), x, &context.genres).await?,
+            // x if x.name == "studygroup" => get_study_group_manga(url.to_owned(), x, &context.genres).await?,
             _ => return Ok(()),
         };
 
@@ -108,12 +108,9 @@ pub mod v1 {
         }
 
         let mut t = match stored.source {
-            x if x.name == "manganelo" => {
-                get_manganelo_manga(stored.url.to_owned(), x, &context.genres).await?
-            }
-            x if x.name == "readm" => {
-                get_readm_manga(stored.url.to_owned(), x, &context.genres).await?
-            }
+            x if x.name == "manganelo" => get_manganelo_manga(stored.url.to_owned(), x, &context.genres).await?,
+            x if x.name == "readm" => get_readm_manga(stored.url.to_owned(), x, &context.genres).await?,
+            // x if x.name == "studygroup" => get_study_group_manga(stored.url.to_owned(), x, &context.genres).await?,
             _ => return Ok(()),
         };
 
@@ -255,13 +252,10 @@ pub mod v1 {
     ) -> Result<(), ErrorResponder> {
         // WIP
 
-        let t = match context.sources.get(req.0.id.as_str()) {
-            Some(x) if x.name == "manganelo" => {
-                get_manganelo_manga(req.url.to_string(), x, &context.genres).await
-            }
-            Some(x) if x.name == "readm" => {
-                get_readm_manga(req.url.to_string(), x, &context.genres).await
-            }
+        let t = match context.sources.get(req.id.as_str()) {
+            Some(x) if x.name == "manganelo" => get_manganelo_manga(req.url.to_string(), x, &context.genres).await,
+            Some(x) if x.name == "readm" => get_readm_manga(req.url.to_string(), x, &context.genres).await,
+            // Some(x) if x.name == "studygroup" => get_study_group_manga(req.url.to_string(), x, &context.genres).await,
             _ => return Ok(()),
         };
         
