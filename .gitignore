@@ -2,4 +2,3 @@
 orange.*
 .DS_Store
 .env
-.cargo/config.toml
