@@ -85,7 +85,7 @@ pub mod v1 {
 
         update_manga(&stored, &mut t, conn).await?;
 
-        println!("Finished Processing {}", url);
+        println!("Finished Processing {url}");
 
         Ok(())
     }
@@ -96,7 +96,7 @@ pub mod v1 {
         id: &str,
         conn: &mut PoolConnection<MySql>
     ) -> MSResult<()> {
-        println!("Processing {}", id);
+        println!("Processing {id}");
 
         let stored = get_db_manga_id(id, conn, context).await?;
 
@@ -116,7 +116,7 @@ pub mod v1 {
 
         update_manga(&stored, &mut t, conn).await?;
 
-        println!("Finished Processing {}", id);
+        println!("Finished Processing {id}");
 
         Ok(())
     }
@@ -149,8 +149,8 @@ pub mod v1 {
         .await?;
 
         for t in all {
-            if let Err(e) = update_request_from_url(context, t.as_str(), &mut *conn).await {
-                println!("{:#?}", e);
+            if let Err(e) = update_request_from_url(context, t.as_str(), &mut conn).await {
+                println!("{e:#?}");
             }
         }
 
@@ -168,8 +168,8 @@ pub mod v1 {
         println!("Processing Refresh Request");
 
         for t in ids.iter() {
-            if let Err(e) = update_request_from_id(context, t.as_str(), &mut *conn).await {
-                println!("{:#?}", e);
+            if let Err(e) = update_request_from_id(context, t.as_str(), &mut conn).await {
+                println!("{e:#?}");
             }
         }
 
@@ -267,8 +267,8 @@ pub mod v1 {
         let mut t = t.unwrap();
 
         let y = match check_if_manga_exists(req.url.as_str(), &mut conn).await {
-            Ok(true) => update_request_from_url(context, req.url.as_str(), &mut *conn).await,
-            Ok(false) => insert_manga_db(&mut t, &mut *conn).await,
+            Ok(true) => update_request_from_url(context, req.url.as_str(), &mut conn).await,
+            Ok(false) => insert_manga_db(&mut t, &mut conn).await,
             Err(t) => {
                 println!("{}", ErrorResponder::from(t).message);
                 Ok(())
