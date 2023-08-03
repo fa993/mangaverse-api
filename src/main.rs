@@ -30,7 +30,7 @@ fn rocket() -> _ {
 
     let _ = dotenv::dotenv();
 
-    let figment = Config::figment().merge(("port", option_env!("PORT").unwrap_or("8080")));
+    let figment = Config::figment().merge(("port", option_env!("PORT").and_then(|f| f.parse::<u16>().ok()).unwrap_or(8080)));
 
     Rocket::custom(figment)
         .attach(Db::init())
