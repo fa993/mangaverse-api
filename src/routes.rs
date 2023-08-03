@@ -65,7 +65,7 @@ pub mod v1 {
         url: &str,
         conn: &mut PoolConnection<MySql>
     ) -> MSResult<()> {
-        println!("Processing {}", url);
+        println!("Processing {url}");
 
         let stored = get_db_manga_url(url, conn, context).await?;
 

@@ -7,6 +7,7 @@ use db::{Assemble, AssembleWithOutput};
 use mangaverse_entity::models::pattern::SourcePattern;
 use mangaverse_entity::models::{genre::Genre, source::SourceTable};
 use mangaverse_sources::Context;
+use rocket::{Rocket, Config};
 use rocket::fairing::AdHoc;
 use rocket_db_pools::{sqlx, Database};
 
@@ -26,7 +27,12 @@ pub struct AllPatterns {
 
 #[launch]
 fn rocket() -> _ {
-    rocket::build()
+
+    let _ = dotenv::dotenv();
+
+    let figment = Config::figment().merge(("port", option_env!("PORT").unwrap_or("8080")));
+
+    Rocket::custom(figment)
         .attach(Db::init())
         .attach(AdHoc::on_ignite("populate state", |rocket| async {
             let dbs = Db::fetch(&rocket).expect("No db");

@@ -1117,6 +1117,7 @@ version = "0.6.0"
 dependencies = [
  "async-trait",
  "chrono",
+ "dotenv",
  "mangaverse-entity",
  "mangaverse-sources",
  "rocket",
